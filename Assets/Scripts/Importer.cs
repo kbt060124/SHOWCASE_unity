@@ -1,6 +1,7 @@
 using Autodesk.Fbx;
 using UnityEngine;
 using UnityEditor;
+using System.IO;
 
 public class Importer : MonoBehaviour
 {
@@ -29,19 +30,48 @@ public class Importer : MonoBehaviour
                 if (!importer.Import(scene))
                 {
                     Debug.LogError("Failed to import scene from file: " + fileName);
+                    return;
                 }
-                else
+
+                // Export the scene to the same path
+                using (FbxExporter exporter = FbxExporter.Create(fbxManager, "myExporter"))
                 {
-                    Debug.Log("Successfully imported scene from file: " + fileName);
+                    if (!exporter.Initialize(fileName, -1, fbxManager.GetIOSettings()))
+                    {
+                        Debug.LogError("Failed to initialize exporter with path: " + fileName);
+                        return;
+                    }
+
+                    if (!exporter.Export(scene))
+                    {
+                        Debug.LogError("Failed to export scene to path: " + fileName);
+                    }
+                    else
+                    {
+                        Debug.Log("Successfully exported scene to path: " + fileName);
+                    }
                 }
             }
+        }
+
+        // Load the imported asset and instantiate it in the scene
+        AssetDatabase.Refresh();
+        GameObject importedObject = AssetDatabase.LoadAssetAtPath<GameObject>(fileName);
+        if (importedObject != null)
+        {
+            Instantiate(importedObject);
+            Debug.Log("Successfully added imported object to the scene.");
+        }
+        else
+        {
+            Debug.LogError("Failed to load imported object from path: " + fileName);
         }
     }
 
     public void ImportSV15PBasketball()
     {
         Debug.Log("ImportSV15PBasketball called"); // Added debug log
-        string fileName = "Assets/Files/SV-15P Basketball.fbx";
+        string fileName = "Assets/Files/SV-15P Basketball.fbx"; // Import source path and destination path are the same
         ImportScene(fileName);
     }
 }
