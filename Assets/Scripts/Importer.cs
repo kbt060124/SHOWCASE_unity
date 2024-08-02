@@ -59,8 +59,20 @@ public class Importer : MonoBehaviour
         GameObject importedObject = AssetDatabase.LoadAssetAtPath<GameObject>(fileName);
         if (importedObject != null)
         {
-            Instantiate(importedObject);
+            // "Objects"という名前のEmpty GameObjectを探すか、なければ新しく作成する
+            GameObject parentObject = GameObject.Find("Objects");
+            if (parentObject == null)
+            {
+                parentObject = new GameObject("Objects");
+            }
+
+            // インポートされたオブジェクトを"Objects"の子としてインスタンス化する
+            GameObject instance = Instantiate(importedObject, parentObject.transform);
             Debug.Log("Successfully added imported object to the scene.");
+
+            // PhysicsAssignerを使用して物理判定を付与する
+            PhysicsAssigner physicsAssigner = parentObject.AddComponent<PhysicsAssigner>();
+            physicsAssigner.AddPhysicsToChildren();
         }
         else
         {
