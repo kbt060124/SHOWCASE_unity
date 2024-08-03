@@ -2,9 +2,75 @@ using Autodesk.Fbx;
 using UnityEngine;
 using UnityEditor;
 using System.IO;
+using System.Collections.Generic;
+using UnityEngine.UI;
+using System.Linq;
 
 public class Importer : MonoBehaviour
 {
+
+    public Transform panelTransform; // サムネイルを表示するパネルのTransform
+
+    private Dictionary<string, Texture2D> thumbnailCache = new Dictionary<string, Texture2D>();
+
+    void Start()
+    {
+        LoadFBXThumbnails();
+    }
+
+    void LoadFBXThumbnails()
+    {
+        string[] fbxFolders = Directory.GetDirectories("Assets/Files");
+        foreach (string folderPath in fbxFolders)
+        {
+            string thumbnailPath = Path.Combine(folderPath, "thumbnail.png");
+            if (File.Exists(thumbnailPath))
+            {
+                Texture2D thumbnail = AssetDatabase.LoadAssetAtPath<Texture2D>(thumbnailPath);
+                if (thumbnail != null)
+                {
+                    string fbxPath = Directory.GetFiles(folderPath, "*.fbx").FirstOrDefault();
+                    if (fbxPath != null)
+                    {
+                        thumbnailCache[fbxPath] = thumbnail;
+                        CreateThumbnailButton(fbxPath, thumbnail);
+                    }
+                }
+            }
+        }
+    }
+
+    void CreateThumbnailButton(string fbxPath, Texture2D thumbnail)
+    {
+        if (panelTransform == null)
+        {
+            Debug.LogError("Panel Transform is not assigned in the Inspector!");
+            return;
+        }
+
+        // サムネイルボタンを動的に生成
+        GameObject thumbnailObj = new GameObject("ThumbnailButton");
+        thumbnailObj.transform.SetParent(panelTransform, false);
+
+        // RectTransformを追加
+        RectTransform rectTransform = thumbnailObj.AddComponent<RectTransform>();
+        rectTransform.sizeDelta = new Vector2(100, 100); // サイズを適切に調整
+
+        // Imageコンポーネントを追加
+        Image thumbnailImage = thumbnailObj.AddComponent<Image>();
+        thumbnailImage.sprite = Sprite.Create(thumbnail, new Rect(0, 0, thumbnail.width, thumbnail.height), Vector2.zero);
+
+        // Buttonコンポーネントを追加
+        Button button = thumbnailObj.AddComponent<Button>();
+        button.onClick.AddListener(() => ImportScene(fbxPath));
+
+        // ボタンの色を設定（オプション）
+        ColorBlock colors = button.colors;
+        colors.normalColor = Color.white;
+        colors.highlightedColor = Color.grey;
+        button.colors = colors;
+    }
+
     protected void ImportScene(string fileName)
     {
         using (FbxManager fbxManager = FbxManager.Create())
@@ -68,7 +134,37 @@ public class Importer : MonoBehaviour
 
             // インポートされたオブジェクトを"Objects"の子としてインスタンス化する
             GameObject instance = Instantiate(importedObject, parentObject.transform);
-            Debug.Log("Successfully added imported object to the scene.");
+            instance.name = Path.GetFileNameWithoutExtension(fileName); // オブジェクト名をファイル名に設定
+
+            // オブジェクトの位置を調整
+            PositionObjectInFrontOfCamera(instance);
+
+            Debug.Log("Successfully added imported object to the scene: " + instance.name);
+
+            // テクスチャを適用する
+            string fbmFolderPath = Path.ChangeExtension(fileName, "fbm");
+            string texturePath = Path.Combine(fbmFolderPath, "texture");
+            if (Directory.Exists(fbmFolderPath) && File.Exists(texturePath))
+            {
+                Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
+                if (texture != null)
+                {
+                    Renderer[] renderers = instance.GetComponentsInChildren<Renderer>();
+                    foreach (Renderer renderer in renderers)
+                    {
+                        renderer.material.mainTexture = texture;
+                    }
+                    Debug.Log("Applied texture to imported object: " + instance.name);
+                }
+                else
+                {
+                    Debug.LogWarning("Texture file found but could not be loaded: " + texturePath);
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Texture file not found for: " + instance.name);
+            }
 
             // PhysicsAssignerを使用して物理判定を付与する
             PhysicsAssigner physicsAssigner = parentObject.AddComponent<PhysicsAssigner>();
@@ -80,10 +176,43 @@ public class Importer : MonoBehaviour
         }
     }
 
-    public void ImportSV15PBasketball()
+    private void PositionObjectInFrontOfCamera(GameObject obj)
     {
-        Debug.Log("ImportSV15PBasketball called"); // Added debug log
-        string fileName = "Assets/Files/SV-15P Basketball.fbx"; // Import source path and destination path are the same
-        ImportScene(fileName);
+        Camera mainCamera = Camera.main;
+        if (mainCamera != null)
+        {
+            // オブジェクトの境界ボックスを取得
+            Bounds bounds = CalculateBounds(obj);
+
+            // カメラの前方4ユニットの位置を計算
+            Vector3 targetPosition = mainCamera.transform.position + mainCamera.transform.forward * 3f;
+
+            // オブジェクトを新しい位置に移動
+            obj.transform.position = targetPosition;
+
+            // オブジェクトをY軸方向に少し上げる（高さを低くするために係数を0.5fに変更）
+            obj.transform.position += Vector3.up * (bounds.extents.y * 0.3f);
+        }
+        else
+        {
+            Debug.LogWarning("メインカメラが見つかりません。オブジェクトの位置を調整できません。");
+        }
     }
+
+    private Bounds CalculateBounds(GameObject obj)
+    {
+        Bounds bounds = new Bounds(obj.transform.position, Vector3.zero);
+        foreach (Renderer renderer in obj.GetComponentsInChildren<Renderer>())
+        {
+            bounds.Encapsulate(renderer.bounds);
+        }
+        return bounds;
+    }
+
+    // public void ImportSV15PBasketball()
+    // {
+    //     Debug.Log("ImportSV15PBasketball called"); // Added debug log
+    //     string fileName = "Assets/Files/SV-15P Basketball.fbx"; // Import source path and destination path are the same
+    //     ImportScene(fileName);
+    // }
 }
