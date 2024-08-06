@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Collections;  // Added this line
 
 [System.Serializable]
 public class SerializableVector3
@@ -199,10 +200,35 @@ public class SaveManager : MonoBehaviour
             }
 
             Debug.Log("シーンが読み込まれました");
+            Debug.Log($"読み込まれたオブジェクト数: {instantiatedObjects.Count}");
+            Debug.Log($"'Objects'コンテナの子オブジェクト数: {newObjectsContainer.transform.childCount}");
+
+            // オブジェクトの生成が完了した後に物理判定を追加
+            StartCoroutine(AddPhysicsToLoadedObjectsDelayed());
         }
         else
         {
             Debug.LogWarning($"保存されたシーンが見つかりません。パス: {path}");
         }
+    }
+
+    private IEnumerator AddPhysicsToLoadedObjectsDelayed()
+    {
+        // 1フレーム待機して、オブジェクトの生成が確実に完了するのを待つ
+        yield return null;
+
+        AddPhysicsToLoadedObjects();
+    }
+
+    private void AddPhysicsToLoadedObjects()
+    {
+        PhysicsAssigner physicsAssigner = GetComponent<PhysicsAssigner>();
+        if (physicsAssigner == null)
+        {
+            physicsAssigner = gameObject.AddComponent<PhysicsAssigner>();
+            Debug.Log("PhysicsAssignerコンポーネントが追加されました。");
+        }
+        physicsAssigner.AddPhysicsToChildren();
+        Debug.Log("読み込まれたオブジェクトに物理判定の追加を試みました。");
     }
 }
