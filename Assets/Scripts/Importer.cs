@@ -120,59 +120,78 @@ public class Importer : MonoBehaviour
             }
         }
 
-        // Load the imported asset and instantiate it in the scene
+        // FBXファイルをインポートしてPrefabを生成
         AssetDatabase.Refresh();
         GameObject importedObject = AssetDatabase.LoadAssetAtPath<GameObject>(fileName);
         if (importedObject != null)
         {
-            // "Objects"という名前のEmpty GameObjectを探すか、なければ新しく作成する
-            GameObject parentObject = GameObject.Find("Objects");
-            if (parentObject == null)
+            // Prefabの保存先パスを設定
+            string prefabName = Path.GetFileNameWithoutExtension(fileName) + ".prefab";
+            string prefabPath = "Assets/Resources/" + prefabName;
+
+            // Prefabを生成
+            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(importedObject, prefabPath);
+            if (prefab != null)
             {
-                parentObject = new GameObject("Objects");
-            }
-
-            // インポートされたオブジェクトを"Objects"の子としてインスタンス化する
-            GameObject instance = Instantiate(importedObject, parentObject.transform);
-            instance.name = Path.GetFileNameWithoutExtension(fileName); // オブジェクト名をファイル名に設定
-
-            // オブジェクトの位置を調整
-            PositionObjectInFrontOfCamera(instance);
-
-            Debug.Log("Successfully added imported object to the scene: " + instance.name);
-
-            // テクスチャを適用する
-            string fbmFolderPath = Path.ChangeExtension(fileName, "fbm");
-            string texturePath = Path.Combine(fbmFolderPath, "texture");
-            if (Directory.Exists(fbmFolderPath) && File.Exists(texturePath))
-            {
-                Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
-                if (texture != null)
+                // "Objects"という名前のEmpty GameObjectを探すか、なければ新しく作成する
+                GameObject parentObject = GameObject.Find("Objects");
+                if (parentObject == null)
                 {
-                    Renderer[] renderers = instance.GetComponentsInChildren<Renderer>();
-                    foreach (Renderer renderer in renderers)
-                    {
-                        renderer.material.mainTexture = texture;
-                    }
-                    Debug.Log("Applied texture to imported object: " + instance.name);
+                    parentObject = new GameObject("Objects");
                 }
-                else
-                {
-                    Debug.LogWarning("Texture file found but could not be loaded: " + texturePath);
-                }
+
+                // 生成したPrefabを元にGameObjectをインスタンス化
+                GameObject instance = PrefabUtility.InstantiatePrefab(prefab, parentObject.transform) as GameObject;
+                instance.name = Path.GetFileNameWithoutExtension(fileName);
+
+                // オブジェクトの位置を調整
+                PositionObjectInFrontOfCamera(instance);
+
+                Debug.Log("Successfully added imported object to the scene: " + instance.name);
+
+                // テクスチャを適用する
+                ApplyTextureToObject(instance, fileName);
+
+                // PhysicsAssignerを使用して物理判定を付与する
+                PhysicsAssigner physicsAssigner = parentObject.AddComponent<PhysicsAssigner>();
+                physicsAssigner.AddPhysicsToChildren();
             }
             else
             {
-                Debug.LogWarning("Texture file not found for: " + instance.name);
+                Debug.LogError("Failed to create prefab from imported object: " + fileName);
             }
-
-            // PhysicsAssignerを使用して物理判定を付与する
-            PhysicsAssigner physicsAssigner = parentObject.AddComponent<PhysicsAssigner>();
-            physicsAssigner.AddPhysicsToChildren();
         }
         else
         {
             Debug.LogError("Failed to load imported object from path: " + fileName);
+        }
+    }
+
+    // テクスチャ適用のためのヘルパーメソッド
+    private void ApplyTextureToObject(GameObject obj, string fbxPath)
+    {
+        string fbmFolderPath = Path.ChangeExtension(fbxPath, "fbm");
+        string texturePath = Path.Combine(fbmFolderPath, "texture");
+        if (Directory.Exists(fbmFolderPath) && File.Exists(texturePath))
+        {
+            Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
+            if (texture != null)
+            {
+                Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
+                foreach (Renderer renderer in renderers)
+                {
+                    renderer.material.mainTexture = texture;
+                }
+                Debug.Log("Applied texture to imported object: " + obj.name);
+            }
+            else
+            {
+                Debug.LogWarning("Texture file found but could not be loaded: " + texturePath);
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Texture file not found for: " + obj.name);
         }
     }
 
