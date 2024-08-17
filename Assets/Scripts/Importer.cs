@@ -48,9 +48,17 @@ public class Importer : MonoBehaviour
             return;
         }
 
+        // Thumbnailsオブジェクトを探す
+        Transform thumbnailsTransform = panelTransform.Find("Thumbnails");
+        if (thumbnailsTransform == null)
+        {
+            Debug.LogError("Thumbnails object not found under Panel!");
+            return;
+        }
+
         // サムネイルボタンを動的に生成
         GameObject thumbnailObj = new GameObject("ThumbnailButton");
-        thumbnailObj.transform.SetParent(panelTransform, false);
+        thumbnailObj.transform.SetParent(thumbnailsTransform, false);
 
         // RectTransformを追加
         RectTransform rectTransform = thumbnailObj.AddComponent<RectTransform>();
