@@ -60,4 +60,6 @@ public class CategoryButton : MonoBehaviour
     {
         return button;
     }
+
+    public string CategoryName => gameObject.name;
 }

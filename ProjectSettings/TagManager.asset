@@ -5,6 +5,8 @@ TagManager:
   serializedVersion: 2
   tags:
   - SceneObject
+  - Shelf
+  - Item
   layers:
   - Default
   - TransparentFX
