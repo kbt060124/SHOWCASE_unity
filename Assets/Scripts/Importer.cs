@@ -15,28 +15,43 @@ public class Importer : MonoBehaviour
 
     void Start()
     {
-        LoadFBXThumbnails();
+        LoadThumbnailsFromFolder("Assets/Files");
     }
 
-    void LoadFBXThumbnails()
+    public void LoadThumbnailsFromFolder(string folderPath)
     {
-        string[] fbxFolders = Directory.GetDirectories("Assets/Files");
-        foreach (string folderPath in fbxFolders)
+        ClearThumbnails();
+        string[] fbxFolders = Directory.GetDirectories(folderPath);
+        foreach (string subFolderPath in fbxFolders)
         {
-            string thumbnailPath = Path.Combine(folderPath, "thumbnail.png");
+            string thumbnailPath = Path.Combine(subFolderPath, "thumbnail.png");
             if (File.Exists(thumbnailPath))
             {
                 Texture2D thumbnail = AssetDatabase.LoadAssetAtPath<Texture2D>(thumbnailPath);
                 if (thumbnail != null)
                 {
-                    string fbxPath = Directory.GetFiles(folderPath, "*.fbx").FirstOrDefault();
+                    string fbxPath = Directory.GetFiles(subFolderPath, "*.fbx").FirstOrDefault();
                     if (fbxPath != null)
                     {
                         thumbnailCache[fbxPath] = thumbnail;
                         CreateThumbnailButton(fbxPath, thumbnail);
+                        Debug.Log($"Created thumbnail for: {fbxPath}");
                     }
                 }
             }
+            else
+            {
+                Debug.LogWarning($"Thumbnail not found in: {subFolderPath}");
+            }
+        }
+    }
+
+    private void ClearThumbnails()
+    {
+        thumbnailCache.Clear();
+        foreach (Transform child in panelTransform.Find("Thumbnails"))
+        {
+            Destroy(child.gameObject);
         }
     }
 
@@ -48,9 +63,17 @@ public class Importer : MonoBehaviour
             return;
         }
 
-        // サムネイルボタンを動的に生成
+        // Thumbnailsオブジェクトを探す
+        Transform thumbnailsTransform = panelTransform.Find("Thumbnails");
+        if (thumbnailsTransform == null)
+        {
+            Debug.LogError("Thumbnails object not found under Panel!");
+            return;
+        }
+
+        // サムネイルボタンを動的生成
         GameObject thumbnailObj = new GameObject("ThumbnailButton");
-        thumbnailObj.transform.SetParent(panelTransform, false);
+        thumbnailObj.transform.SetParent(thumbnailsTransform, false);
 
         // RectTransformを追加
         RectTransform rectTransform = thumbnailObj.AddComponent<RectTransform>();
@@ -143,6 +166,22 @@ public class Importer : MonoBehaviour
                 // 生成したPrefabを元にGameObjectをインスタンス化
                 GameObject instance = PrefabUtility.InstantiatePrefab(prefab, parentObject.transform) as GameObject;
                 instance.name = Path.GetFileNameWithoutExtension(fileName);
+
+                // タグを付ける
+                if (fileName.StartsWith("Assets/Shelves"))
+                {
+                    instance.tag = "Shelf";
+                }
+                else if (fileName.StartsWith("Assets/Files"))
+                {
+                    instance.tag = "Item";
+                }
+                else
+                {
+                    instance.tag = "SceneObject";
+                }
+
+                Debug.Log($"タグを付けました: {instance.name} - タグ: {instance.tag} - パス: {fileName}");
 
                 // オブジェクトの位置を調整
                 PositionObjectInFrontOfCamera(instance);

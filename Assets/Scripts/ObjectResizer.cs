@@ -8,12 +8,20 @@ public class ObjectResizer : ObjectSelector
     public void ToggleResizeMode()
     {
         isResizeModeActive = !isResizeModeActive;
+        if (isResizeModeActive)
+        {
+            OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.Resize);
+        }
+        else
+        {
+            OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.None);
+        }
         Debug.Log("リサイズモード: " + (isResizeModeActive ? "オン" : "オフ"));
     }
 
     void Update()
     {
-        if (!isResizeModeActive) return;
+        if (!isResizeModeActive || !OperationModeManager.Instance.IsCurrentMode(OperationModeManager.OperationMode.Resize)) return;
 
         if (SelectObject())
         {
