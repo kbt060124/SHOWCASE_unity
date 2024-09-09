@@ -57,14 +57,18 @@ public class ObjectSelector : MonoBehaviour
 
             if (Physics.Raycast(ray, out hit))
             {
-                if (selectedObject != hit.transform.gameObject)
+                GameObject hitObject = hit.transform.gameObject;
+                if (hitObject.CompareTag("Shelf") || hitObject.CompareTag("Item"))
                 {
-                    selectedObject = hit.transform.gameObject;
-                    initialScale = selectedObject.transform.localScale;
-                    initialRotation = selectedObject.transform.rotation;
-                    Debug.Log("選択されたオブジェクト: " + selectedObject.name);
-                    UpdateKinematicStates();
-                    return true;
+                    if (selectedObject != hitObject)
+                    {
+                        selectedObject = hitObject;
+                        initialScale = selectedObject.transform.localScale;
+                        initialRotation = selectedObject.transform.rotation;
+                        Debug.Log("選択されたオブジェクト: " + selectedObject.name);
+                        UpdateKinematicStates();
+                        return true;
+                    }
                 }
             }
         }

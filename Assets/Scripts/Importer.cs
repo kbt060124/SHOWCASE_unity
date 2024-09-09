@@ -13,9 +13,48 @@ public class Importer : MonoBehaviour
 
     private Dictionary<string, Texture2D> thumbnailCache = new Dictionary<string, Texture2D>();
 
+    private Vector3 roomCenter;
+    private Vector3 roomSize;
+
+    private string fileName;
+
     void Start()
     {
+        CalculateRoomCenterAndSize();
         LoadThumbnailsFromFolder("Assets/Files");
+    }
+
+    private void CalculateRoomCenterAndSize()
+    {
+        GameObject wallRight = GameObject.Find("wallRight");
+        GameObject wallLeft = GameObject.Find("wallLeft");
+        GameObject wallBack = GameObject.Find("wallBack");
+        GameObject ceiling = GameObject.Find("ceiling");
+        GameObject floor = GameObject.Find("floor");
+
+        if (wallRight && wallLeft && wallBack && ceiling && floor)
+        {
+            roomCenter = new Vector3(
+                (wallRight.transform.position.x + wallLeft.transform.position.x) / 2f,
+                (ceiling.transform.position.y + floor.transform.position.y) / 2f,
+                (wallBack.transform.position.z + Camera.main.transform.position.z) / 2f
+            );
+            roomSize = new Vector3(
+                Vector3.Distance(wallRight.transform.position, wallLeft.transform.position),
+                Vector3.Distance(ceiling.transform.position, floor.transform.position),
+                Vector3.Distance(wallBack.transform.position, Camera.main.transform.position)
+            );
+            Debug.Log($"計算されたroomCenter: {roomCenter}");
+            Debug.Log($"計算されたroomSize: {roomSize}");
+        }
+        else
+        {
+            Debug.LogWarning("部屋のオブジェクトが見つかりません。デフォルト値を使用します。");
+            roomCenter = Vector3.zero;
+            roomSize = new Vector3(10f, 5f, 10f);
+            Debug.Log($"デフォルトのroomSize: {roomSize}");
+        }
+        Debug.Log($"最終的なroomSize: x={roomSize.x}, y={roomSize.y}, z={roomSize.z}");
     }
 
     public void LoadThumbnailsFromFolder(string folderPath)
@@ -77,7 +116,7 @@ public class Importer : MonoBehaviour
 
         // RectTransformを追加
         RectTransform rectTransform = thumbnailObj.AddComponent<RectTransform>();
-        rectTransform.sizeDelta = new Vector2(100, 100); // サイズを適切に調整
+        rectTransform.sizeDelta = new Vector2(100, 100); // サイズを切に調整
 
         // Imageコンポーネントを追加
         Image thumbnailImage = thumbnailObj.AddComponent<Image>();
@@ -96,6 +135,8 @@ public class Importer : MonoBehaviour
 
     protected void ImportScene(string fileName)
     {
+        this.fileName = fileName;
+
         using (FbxManager fbxManager = FbxManager.Create())
         {
             // configure IO settings.
@@ -236,25 +277,38 @@ public class Importer : MonoBehaviour
 
     private void PositionObjectInFrontOfCamera(GameObject obj)
     {
-        Camera mainCamera = Camera.main;
-        if (mainCamera != null)
+        Bounds bounds = CalculateBounds(obj);
+        Vector3 originalScale = obj.transform.localScale;
+
+        // スケーリングの計算
+        float minAllowedScale = roomSize.y * 0.05f;
+        float maxAllowedScale = roomSize.y * 0.5f;
+        float scaleFactor = Mathf.Min(
+            maxAllowedScale / bounds.size.y,
+            roomSize.x / (bounds.size.x * 2),
+            roomSize.z / (bounds.size.z * 2)
+        );
+
+        // 最小スケールを設定
+        scaleFactor = Mathf.Max(scaleFactor, minAllowedScale / Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z));
+
+        // Itemタグがついたオブジェクトの場合、スケール係数をさらに半分にする
+        if (obj.CompareTag("Item"))
         {
-            // オブジェクトの境界ボックスを取得
-            Bounds bounds = CalculateBounds(obj);
-
-            // カメラの前方4ユニットの位置を計算
-            Vector3 targetPosition = mainCamera.transform.position + mainCamera.transform.forward * 3f;
-
-            // オブジェクトを新しい位置に移動
-            obj.transform.position = targetPosition;
-
-            // オブジェクトをY軸方向に少し上げる（高さを低くするために係数を0.5fに変更）
-            obj.transform.position += Vector3.up * (bounds.extents.y * 0.3f);
+            scaleFactor *= 0.5f;
         }
-        else
-        {
-            Debug.LogWarning("メインカメラが見つかりません。オブジェクトの位置を調整できません。");
-        }
+
+        // スケールを適用
+        obj.transform.localScale = originalScale * scaleFactor;
+
+        // バウンディングボックスを再計算
+        bounds = CalculateBounds(obj);
+
+        // オブジェクトを部屋の中心に配置し、床の上に置く
+        float yOffset = bounds.extents.y;
+        obj.transform.position = new Vector3(roomCenter.x, roomCenter.y - roomSize.y / 2 + yOffset, roomCenter.z);
+
+        Debug.Log($"オブジェクト '{obj.name}' の最終位置: {obj.transform.position}, スケール: {obj.transform.localScale}, 元のスケール: {originalScale}, 適用されたスケール係数: {scaleFactor}, タグ: {obj.tag}");
     }
 
     private Bounds CalculateBounds(GameObject obj)
