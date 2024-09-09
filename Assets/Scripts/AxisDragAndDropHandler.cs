@@ -8,9 +8,21 @@ public class AxisDragAndDropHandler : ObjectSelector
     private Vector3 screenPoint;
     private Vector3 initialPosition;
 
+    private GameObject wallRight;
+    private GameObject wallLeft;
+    private GameObject wallBack;
+    private GameObject ceiling;
+    private GameObject floor;
+
     void Start()
     {
         xzPlane = new Plane(Vector3.up, Vector3.zero);
+        
+        wallRight = GameObject.FindGameObjectWithTag("WallRight");
+        wallLeft = GameObject.FindGameObjectWithTag("WallLeft");
+        wallBack = GameObject.FindGameObjectWithTag("WallBack");
+        ceiling = GameObject.FindGameObjectWithTag("Ceiling");
+        floor = GameObject.FindGameObjectWithTag("Floor");
     }
 
     public void ToggleAxisMode()
@@ -39,25 +51,37 @@ public class AxisDragAndDropHandler : ObjectSelector
     {
         if (OperationModeManager.Instance.GetCurrentMode() != OperationModeManager.OperationMode.AxisDragAndDrop) return;
 
-        if (SelectObject())
+        if (Input.GetMouseButtonDown(0))
         {
-            initialY = selectedObject.transform.position.y;
-            screenPoint = Camera.main.WorldToScreenPoint(selectedObject.transform.position);
-            initialPosition = selectedObject.transform.position;
+            SelectObject();
         }
 
-        if (Input.GetMouseButton(0) && selectedObject != null)
+        if (selectedObject != null && Input.GetMouseButton(0))
         {
-            Vector3 newPosition = CalculateNewPosition();
-            if (!IsColliding(newPosition))
+            Vector3 mousePosition = Input.mousePosition;
+            Ray ray = Camera.main.ScreenPointToRay(mousePosition);
+            float distance;
+
+            if (isXZMode)
             {
-                selectedObject.transform.position = newPosition;
+                if (xzPlane.Raycast(ray, out distance))
+                {
+                    Vector3 hitPoint = ray.GetPoint(distance);
+                    Vector3 newPosition = new Vector3(hitPoint.x, selectedObject.transform.position.y, hitPoint.z);
+                    if (!IsColliding(newPosition))
+                    {
+                        selectedObject.transform.position = newPosition;
+                    }
+                }
             }
-        }
-
-        if (Input.GetMouseButtonUp(0) && selectedObject != null)
-        {
-            selectedObject = null;
+            else
+            {
+                if (Physics.Raycast(ray, out RaycastHit hit))
+                {
+                    Vector3 newPosition = new Vector3(selectedObject.transform.position.x, hit.point.y, selectedObject.transform.position.z);
+                    IsColliding(newPosition); // 床との衝突チェックを行い、必要に応じて位置を調整
+                }
+            }
         }
     }
 
@@ -92,39 +116,53 @@ public class AxisDragAndDropHandler : ObjectSelector
     {
         if (selectedObject == null) return false;
 
-        Collider[] colliders = selectedObject.GetComponents<Collider>();
-        foreach (Collider collider in colliders)
+        Bounds objectBounds = GetObjectBounds(selectedObject, newPosition);
+
+        // 部屋の境界との衝突チェック
+        if (wallRight != null && objectBounds.max.x > wallRight.transform.position.x) return true;
+        if (wallLeft != null && objectBounds.min.x < wallLeft.transform.position.x) return true;
+        if (wallBack != null && objectBounds.max.z > wallBack.transform.position.z) return true;
+        if (ceiling != null && objectBounds.max.y > ceiling.transform.position.y) return true;
+
+        // 床との衝突チェック（オブジェクトを床の上に配置）
+        if (floor != null)
         {
-            if (collider is BoxCollider boxCollider)
+            float floorY = floor.transform.position.y;
+            if (objectBounds.min.y < floorY)
             {
-                Vector3 size = boxCollider.size;
-                Vector3 center = newPosition + boxCollider.center;
-
-                Collider[] hitColliders = Physics.OverlapBox(center, size / 2, selectedObject.transform.rotation);
-                foreach (Collider hitCollider in hitColliders)
-                {
-                    if (hitCollider.gameObject != selectedObject)
-                    {
-                        return true;
-                    }
-                }
-            }
-            else
-            {
-                // BoxCollider以外のColliderの場合、簡易的な判定を行う
-                Vector3 center = newPosition;
-                Vector3 size = collider.bounds.size;
-
-                Collider[] hitColliders = Physics.OverlapBox(center, size / 2, selectedObject.transform.rotation);
-                foreach (Collider hitCollider in hitColliders)
-                {
-                    if (hitCollider.gameObject != selectedObject)
-                    {
-                        return true;
-                    }
-                }
+                float adjustment = floorY - objectBounds.min.y;
+                selectedObject.transform.position = new Vector3(newPosition.x, newPosition.y + adjustment, newPosition.z);
+                return false; // 床に接地させたので、衝突としては扱わない
             }
         }
+
+        // 他のオブジェクトとの衝突チェック
+        Collider[] hitColliders = Physics.OverlapBox(objectBounds.center, objectBounds.extents, selectedObject.transform.rotation);
+        foreach (Collider hitCollider in hitColliders)
+        {
+            if (hitCollider.gameObject != selectedObject && hitCollider.gameObject != floor)
+            {
+                return true;
+            }
+        }
+
         return false;
+    }
+
+    private Bounds GetObjectBounds(GameObject obj, Vector3 position)
+    {
+        Bounds bounds = new Bounds(position, Vector3.zero);
+        Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
+        
+        foreach (Renderer renderer in renderers)
+        {
+            bounds.Encapsulate(renderer.bounds);
+        }
+
+        // オブジェクトの現在位置と新しい位置の差分を計算
+        Vector3 offset = position - obj.transform.position;
+        bounds.center += offset;
+
+        return bounds;
     }
 }
