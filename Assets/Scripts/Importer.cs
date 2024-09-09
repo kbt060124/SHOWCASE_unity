@@ -26,11 +26,11 @@ public class Importer : MonoBehaviour
 
     private void CalculateRoomCenterAndSize()
     {
-        GameObject wallRight = GameObject.Find("wallRight");
-        GameObject wallLeft = GameObject.Find("wallLeft");
-        GameObject wallBack = GameObject.Find("wallBack");
-        GameObject ceiling = GameObject.Find("ceiling");
-        GameObject floor = GameObject.Find("floor");
+        GameObject wallRight = GameObject.Find("WallRight");
+        GameObject wallLeft = GameObject.Find("WallLeft");
+        GameObject wallBack = GameObject.Find("WallBack");
+        GameObject ceiling = GameObject.Find("Ceiling");
+        GameObject floor = GameObject.Find("Floor");
 
         if (wallRight && wallLeft && wallBack && ceiling && floor)
         {
