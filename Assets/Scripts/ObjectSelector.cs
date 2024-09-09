@@ -1,11 +1,15 @@
 using UnityEngine;
 using System.Collections.Generic; // この行を追加
+using UnityFx.Outline;
 
 public class ObjectSelector : MonoBehaviour
 {
     protected GameObject selectedObject;
     protected Vector3 initialScale;
     protected Quaternion initialRotation;
+
+    [SerializeField]
+    private OutlineResources outlineResources; // インスペクターでアサインする
 
     private void SetKinematicState(GameObject obj, bool isKinematic)
     {
@@ -62,10 +66,20 @@ public class ObjectSelector : MonoBehaviour
                 {
                     if (selectedObject != hitObject)
                     {
+                        // 以前に選択されたオブジェクトのアウトラインを削除
+                        if (selectedObject != null)
+                        {
+                            RemoveOutline(selectedObject);
+                        }
+
                         selectedObject = hitObject;
                         initialScale = selectedObject.transform.localScale;
                         initialRotation = selectedObject.transform.rotation;
                         Debug.Log("選択されたオブジェクト: " + selectedObject.name);
+
+                        // 新しく選択されたオブジェクトにアウトラインを追加
+                        AddOutline(selectedObject);
+
                         UpdateKinematicStates();
                         return true;
                     }
@@ -73,5 +87,46 @@ public class ObjectSelector : MonoBehaviour
             }
         }
         return false;
+    }
+
+    private void AddOutline(GameObject obj)
+    {
+        if (outlineResources == null)
+        {
+            Debug.LogError("OutlineResources is not set. Cannot add outline.");
+            return;
+        }
+
+        OutlineBehaviour outlineBehaviour = obj.GetComponent<OutlineBehaviour>();
+        if (outlineBehaviour == null)
+        {
+            outlineBehaviour = obj.AddComponent<OutlineBehaviour>();
+        }
+
+        outlineBehaviour.OutlineResources = outlineResources;
+        outlineBehaviour.OutlineColor = Color.green;
+        outlineBehaviour.OutlineWidth = 10;
+        outlineBehaviour.OutlineIntensity = 10;
+    }
+
+    private void RemoveOutline(GameObject obj)
+    {
+        OutlineBehaviour outlineBehaviour = obj.GetComponent<OutlineBehaviour>();
+        if (outlineBehaviour != null)
+        {
+            Destroy(outlineBehaviour);
+        }
+    }
+
+    private void Awake()
+    {
+        if (outlineResources == null)
+        {
+            outlineResources = Resources.Load<OutlineResources>("DefaultOutlineResources");
+            if (outlineResources == null)
+            {
+                Debug.LogError("DefaultOutlineResources not found. Please create and assign an OutlineResources asset.");
+            }
+        }
     }
 }
