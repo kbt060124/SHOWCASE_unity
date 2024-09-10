@@ -191,35 +191,66 @@ public class Importer : MonoBehaviour
         {
             // Prefabの保存先パスを設定
             string prefabName = Path.GetFileNameWithoutExtension(fileName) + ".prefab";
-            string prefabPath = "Assets/Resources/" + prefabName;
+            string prefabPath;
+            if (fileName.StartsWith("Assets/Files"))
+            {
+                prefabPath = "Assets/Resources/Items/" + prefabName;
+            }
+            else if (fileName.StartsWith("Assets/Shelves"))
+            {
+                prefabPath = "Assets/Resources/Shelves/" + prefabName;
+            }
+            else
+            {
+                prefabPath = "Assets/Resources/" + prefabName;
+            }
+
+            // フォルダが存在しない場合は作成
+            Directory.CreateDirectory(Path.GetDirectoryName(prefabPath));
 
             // Prefabを生成
             GameObject prefab = PrefabUtility.SaveAsPrefabAsset(importedObject, prefabPath);
             if (prefab != null)
             {
-                // "Objects"という名前のEmpty GameObjectを探すか、なければ新しく作成する
                 GameObject parentObject = GameObject.Find("Objects");
                 if (parentObject == null)
                 {
                     parentObject = new GameObject("Objects");
                 }
 
+                GameObject itemsFolder = parentObject.transform.Find("Items")?.gameObject;
+                if (itemsFolder == null)
+                {
+                    itemsFolder = new GameObject("Items");
+                    itemsFolder.transform.SetParent(parentObject.transform);
+                }
+
+                GameObject shelvesFolder = parentObject.transform.Find("Shelves")?.gameObject;
+                if (shelvesFolder == null)
+                {
+                    shelvesFolder = new GameObject("Shelves");
+                    shelvesFolder.transform.SetParent(parentObject.transform);
+                }
+
                 // 生成したPrefabを元にGameObjectをインスタンス化
-                GameObject instance = PrefabUtility.InstantiatePrefab(prefab, parentObject.transform) as GameObject;
+                GameObject instance = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
                 instance.name = Path.GetFileNameWithoutExtension(fileName);
 
-                // タグを付ける
+                // タグを付けてフォルダに配置
                 if (fileName.StartsWith("Assets/Shelves"))
                 {
                     instance.tag = "Shelf";
+                    instance.transform.SetParent(shelvesFolder.transform);
                 }
                 else if (fileName.StartsWith("Assets/Files"))
                 {
                     instance.tag = "Item";
+                    instance.transform.SetParent(itemsFolder.transform);
                 }
                 else
                 {
                     instance.tag = "SceneObject";
+                    instance.transform.SetParent(parentObject.transform);
                 }
 
                 Debug.Log($"タグを付けました: {instance.name} - タグ: {instance.tag} - パス: {fileName}");

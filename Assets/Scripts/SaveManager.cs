@@ -63,7 +63,6 @@ public class SaveManager : MonoBehaviour
 
     public void SaveScene()
     {
-        Debug.Log($"Application.persistentDataPath: {Application.persistentDataPath}");
         SceneData sceneData = new SceneData();
         GameObject objectsContainer = GameObject.Find("Objects");
 
@@ -81,51 +80,49 @@ public class SaveManager : MonoBehaviour
             Debug.LogWarning("'Objects'コンテナが見つかりません。");
         }
 
+        string json = JsonUtility.ToJson(sceneData);
         string savePath = Path.Combine(Application.persistentDataPath, SAVE_FILE_NAME);
+        File.WriteAllText(savePath, json);
 
-        try
-        {
-            string json = JsonUtility.ToJson(sceneData);
-            File.WriteAllText(savePath, json);
-
-            Debug.Log("シーンが保存されました");
-            Debug.Log($"保存ファイルのパス: {savePath}");
-            Debug.Log($"保存されたJSONデータ: {json}");
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"ファイルの保存中にエラーが発生しました: {e.Message}");
-        }
-
-        if (File.Exists(savePath))
-        {
-            Debug.Log($"ファイルが正に作成されました: {savePath}");
-        }
-        else
-        {
-            Debug.LogError($"ファイルの作成に失敗しました: {savePath}");
-        }
+        Debug.Log("シーンが保存されました");
+        Debug.Log($"保存されたJSONデータ: {json}");
+        Debug.Log($"保存先: {savePath}");
     }
 
     private void SaveObjectRecursively(GameObject obj, SceneData sceneData, int parentIndex = -1)
     {
+        // フォルダオブジェクトをスキップ
+        if (obj.name == "Items" || obj.name == "Shelves")
+        {
+            int currentIndex = parentIndex;
+            foreach (Transform child in obj.transform)
+            {
+                SaveObjectRecursively(child.gameObject, sceneData, currentIndex);
+            }
+            return;
+        }
+
         string prefabPath = GetPrefabPath(obj);
 
-        ObjectData objData = new ObjectData
+        // プレハブパスが有効な場合のみオブジェクトを保存
+        if (!string.IsNullOrEmpty(prefabPath))
         {
-            prefabPath = prefabPath,
-            position = new SerializableVector3(obj.transform.localPosition),
-            rotation = new SerializableQuaternion(obj.transform.localRotation),
-            scale = new SerializableVector3(obj.transform.localScale),
-            parentIndex = parentIndex
-        };
-        int currentIndex = sceneData.objects.Count;
-        sceneData.objects.Add(objData);
-        Debug.Log($"オブジェクト '{obj.name}' を保存: プレハブパス {objData.prefabPath}, 位置 {obj.transform.localPosition}, 回転 {obj.transform.localRotation.eulerAngles}, スケール {obj.transform.localScale}");
+            ObjectData objData = new ObjectData
+            {
+                prefabPath = prefabPath.Replace("Resources/", ""),
+                position = new SerializableVector3(obj.transform.localPosition),
+                rotation = new SerializableQuaternion(obj.transform.localRotation),
+                scale = new SerializableVector3(obj.transform.localScale),
+                parentIndex = parentIndex
+            };
+            int currentIndex = sceneData.objects.Count;
+            sceneData.objects.Add(objData);
+            Debug.Log($"オブジェクト '{obj.name}' を保存: プレハブパス {objData.prefabPath}, 位置 {obj.transform.localPosition}, 回転 {obj.transform.localRotation.eulerAngles}, スケール {obj.transform.localScale}");
 
-        foreach (Transform child in obj.transform)
-        {
-            SaveObjectRecursively(child.gameObject, sceneData, currentIndex);
+            foreach (Transform child in obj.transform)
+            {
+                SaveObjectRecursively(child.gameObject, sceneData, currentIndex);
+            }
         }
     }
 
@@ -134,87 +131,125 @@ public class SaveManager : MonoBehaviour
         // オブジェクト名から(Clone)を削除
         string objName = obj.name.Replace("(Clone)", "");
 
-        // Resourcesフォルダからの相対パスを取得
-        string path = objName;
-        Transform parent = obj.transform.parent;
-        while (parent != null && parent.name != "Objects")
+        // タグに基づいてパスを設定
+        if (obj.CompareTag("Shelf"))
         {
-            path = parent.name + "/" + path;
-            parent = parent.parent;
+            return "Shelves/" + objName;
         }
-        // "Resources/"プレフィックスを追加
-        return "Resources/" + path;
+        else if (obj.CompareTag("Item"))
+        {
+            return "Items/" + objName;
+        }
+        else
+        {
+            // タグが一致しない場合は空文字列を返す
+            return "";
+        }
     }
 
     public void LoadScene()
     {
-        string path = Path.Combine(Application.persistentDataPath, SAVE_FILE_NAME);
-        if (File.Exists(path))
+        string savePath = Path.Combine(Application.persistentDataPath, SAVE_FILE_NAME);
+        if (!File.Exists(savePath))
         {
-            string json = File.ReadAllText(path);
-            SceneData sceneData = JsonUtility.FromJson<SceneData>(json);
+            Debug.Log("保存されたシーンデータがありません。");
+            return;
+        }
 
-            Debug.Log($"読み込まれたJSONデータ: {json}");
+        string json = File.ReadAllText(savePath);
+        SceneData sceneData = JsonUtility.FromJson<SceneData>(json);
 
-            GameObject existingObjectsContainer = GameObject.Find("Objects");
-            if (existingObjectsContainer != null)
+        // 既存のObjectsを取得
+        GameObject existingObjects = GameObject.Find("Objects");
+        if (existingObjects == null)
+        {
+            existingObjects = new GameObject("Objects");
+        }
+
+        // 既存のItems, Shelvesフォルダを取得または作成
+        GameObject itemsFolder = existingObjects.transform.Find("Items")?.gameObject;
+        if (itemsFolder == null)
+        {
+            itemsFolder = new GameObject("Items");
+            itemsFolder.transform.SetParent(existingObjects.transform);
+        }
+
+        GameObject shelvesFolder = existingObjects.transform.Find("Shelves")?.gameObject;
+        if (shelvesFolder == null)
+        {
+            shelvesFolder = new GameObject("Shelves");
+            shelvesFolder.transform.SetParent(existingObjects.transform);
+        }
+
+        List<GameObject> instantiatedObjects = new List<GameObject>();
+
+        foreach (ObjectData objData in sceneData.objects)
+        {
+            GameObject prefab = Resources.Load<GameObject>(objData.prefabPath.Replace("Resources/", ""));
+            if (prefab != null)
             {
-                Destroy(existingObjectsContainer);
-            }
+                GameObject newObj = Instantiate(prefab);
+                newObj.name = Path.GetFileName(objData.prefabPath);
+                newObj.transform.localPosition = objData.position.ToVector3();
+                newObj.transform.localRotation = objData.rotation.ToQuaternion();
+                newObj.transform.localScale = objData.scale.ToVector3();
 
-            GameObject newObjectsContainer = new GameObject("Objects");
-            List<GameObject> instantiatedObjects = new List<GameObject>();
-
-            foreach (ObjectData objData in sceneData.objects)
-            {
-                GameObject prefab = Resources.Load<GameObject>(objData.prefabPath.Replace("Resources/", ""));
-                if (prefab != null)
+                // タグを付与
+                if (objData.prefabPath.StartsWith("Items/"))
                 {
-                    GameObject newObj = Instantiate(prefab);
-                    newObj.name = Path.GetFileName(objData.prefabPath);
-                    newObj.transform.localPosition = objData.position.ToVector3();
-                    newObj.transform.localRotation = objData.rotation.ToQuaternion();
-                    newObj.transform.localScale = objData.scale.ToVector3();
-                    instantiatedObjects.Add(newObj);
+                    newObj.tag = "Item";
+                    newObj.transform.SetParent(itemsFolder.transform);
+                }
+                else if (objData.prefabPath.StartsWith("Shelves/"))
+                {
+                    newObj.tag = "Shelf";
+                    newObj.transform.SetParent(shelvesFolder.transform);
                 }
                 else
                 {
-                    Debug.LogWarning($"プレハブが見つかりません: {objData.prefabPath}");
-                    instantiatedObjects.Add(null);
+                    newObj.tag = "SceneObject";
+                    newObj.transform.SetParent(existingObjects.transform);
                 }
-            }
 
-            for (int i = 0; i < sceneData.objects.Count; i++)
+                instantiatedObjects.Add(newObj);
+            }
+            else
             {
-                if (instantiatedObjects[i] != null)
+                Debug.LogWarning($"プレハブが見つかりません: {objData.prefabPath}");
+                instantiatedObjects.Add(null);
+            }
+        }
+
+        // 親子関係を設定
+        for (int i = 0; i < sceneData.objects.Count; i++)
+        {
+            if (instantiatedObjects[i] != null && sceneData.objects[i].parentIndex != -1)
+            {
+                if (sceneData.objects[i].parentIndex >= 0 && sceneData.objects[i].parentIndex < instantiatedObjects.Count)
                 {
-                    if (sceneData.objects[i].parentIndex == -1)
+                    GameObject parentObject = instantiatedObjects[sceneData.objects[i].parentIndex];
+                    if (parentObject != null)
                     {
-                        instantiatedObjects[i].transform.SetParent(newObjectsContainer.transform);
+                        instantiatedObjects[i].transform.SetParent(parentObject.transform);
                     }
                     else
                     {
-                        instantiatedObjects[i].transform.SetParent(instantiatedObjects[sceneData.objects[i].parentIndex].transform);
+                        Debug.LogWarning($"親オブジェクトが見つかりません。インデックス: {sceneData.objects[i].parentIndex}。現在の親を維持します。");
                     }
                 }
+                else
+                {
+                    Debug.LogWarning($"無効な親インデックス: {sceneData.objects[i].parentIndex}。現在の親を維持します。");
+                }
             }
-
-            Debug.Log("シーンが読み込まれました");
-            Debug.Log($"読み込まれたオブジェクト数: {instantiatedObjects.Count}");
-            Debug.Log($"'Objects'コンテナの子オブジェクト数: {newObjectsContainer.transform.childCount}");
-
-            // オブジェクトの生成が完了した後に物理判定を追加
-            StartCoroutine(AddPhysicsToLoadedObjectsDelayed());
         }
-        else
-        {
-            Debug.LogWarning($"保存されたシーンが見つかりません。パス: {path}");
-        }
+
+        Debug.Log("シーンを読み込みました。");
     }
 
     private IEnumerator AddPhysicsToLoadedObjectsDelayed()
     {
-        // 1フレーム待機して、オブジェクトの生成が確実に完了するのを待つ
+        // 1フレーム待機して、オブジェクトの生成が確実に完了すのを待つ
         yield return null;
 
         AddPhysicsToLoadedObjects();
