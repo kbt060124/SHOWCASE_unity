@@ -127,17 +127,23 @@ public class AxisDragAndDropHandler : ObjectSelector
         if (wallBack != null && objectBounds.max.z > wallBack.transform.position.z) return true;
         if (ceiling != null && objectBounds.max.y > ceiling.transform.position.y) return true;
 
-        // 床との衝突チェック
-        if (floor != null && objectBounds.min.y < floor.transform.position.y)
+        // 床との衝突チェック（オブジェクトを床の上に配置）
+        if (floor != null)
         {
-            return true; // 床を透過させないようにする
+            float floorY = floor.transform.position.y;
+            if (objectBounds.min.y < floorY)
+            {
+                float adjustment = floorY - objectBounds.min.y;
+                selectedObject.transform.position = new Vector3(newPosition.x, newPosition.y + adjustment, newPosition.z);
+                return false; // 床に接地させたので、衝突としては扱わない
+            }
         }
 
         // 他のオブジェクトとの衝突チェック
         Collider[] hitColliders = Physics.OverlapBox(objectBounds.center, objectBounds.extents, selectedObject.transform.rotation);
         foreach (Collider hitCollider in hitColliders)
         {
-            if (hitCollider.gameObject != selectedObject)
+            if (hitCollider.gameObject != selectedObject && hitCollider.gameObject != floor)
             {
                 return true;
             }
