@@ -7,7 +7,6 @@ public class AxisDragAndDropHandler : ObjectSelector
     private float initialY;
     private Vector3 screenPoint;
     private Vector3 initialPosition;
-
     private GameObject wallRight;
     private GameObject wallLeft;
     private GameObject wallBack;
@@ -17,12 +16,15 @@ public class AxisDragAndDropHandler : ObjectSelector
     void Start()
     {
         xzPlane = new Plane(Vector3.up, Vector3.zero);
-        
         wallRight = GameObject.FindGameObjectWithTag("WallRight");
         wallLeft = GameObject.FindGameObjectWithTag("WallLeft");
         wallBack = GameObject.FindGameObjectWithTag("WallBack");
         ceiling = GameObject.FindGameObjectWithTag("Ceiling");
         floor = GameObject.FindGameObjectWithTag("Floor");
+
+        // 初期状態をXZ軸モードに設定
+        OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.AxisDragAndDrop);
+        Debug.Log("初期状態：XZ軸モードをオンにしました");
     }
 
     public void ToggleAxisMode()
@@ -35,15 +37,10 @@ public class AxisDragAndDropHandler : ObjectSelector
             isXZMode = true;
             Debug.Log("XZ軸モードをオンにしました");
         }
-        else if (isXZMode)
-        {
-            isXZMode = false;
-            Debug.Log("Y軸モードに切り替えました");
-        }
         else
         {
-            OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.None);
-            Debug.Log("ドラッグ＆ドロップモードをオフにしました");
+            isXZMode = !isXZMode;
+            Debug.Log(isXZMode ? "XZ軸モードに切り替えました" : "XY軸モードに切り替えました");
         }
     }
 
@@ -60,11 +57,11 @@ public class AxisDragAndDropHandler : ObjectSelector
         {
             Vector3 mousePosition = Input.mousePosition;
             Ray ray = Camera.main.ScreenPointToRay(mousePosition);
-            float distance;
 
             if (isXZMode)
             {
-                if (xzPlane.Raycast(ray, out distance))
+                // XZ平面での移動（既存のコード）
+                if (xzPlane.Raycast(ray, out float distance))
                 {
                     Vector3 hitPoint = ray.GetPoint(distance);
                     Vector3 newPosition = new Vector3(hitPoint.x, selectedObject.transform.position.y, hitPoint.z);
@@ -76,10 +73,16 @@ public class AxisDragAndDropHandler : ObjectSelector
             }
             else
             {
-                if (Physics.Raycast(ray, out RaycastHit hit))
+                // XY平面での移動（新しいコード）
+                Plane xyPlane = new Plane(Camera.main.transform.forward, selectedObject.transform.position);
+                if (xyPlane.Raycast(ray, out float distance))
                 {
-                    Vector3 newPosition = new Vector3(selectedObject.transform.position.x, hit.point.y, selectedObject.transform.position.z);
-                    IsColliding(newPosition); // 床との衝突チェックを行い、必要に応じて位置を調整
+                    Vector3 hitPoint = ray.GetPoint(distance);
+                    Vector3 newPosition = new Vector3(hitPoint.x, hitPoint.y, selectedObject.transform.position.z);
+                    if (!IsColliding(newPosition))
+                    {
+                        selectedObject.transform.position = newPosition;
+                    }
                 }
             }
         }
@@ -153,7 +156,7 @@ public class AxisDragAndDropHandler : ObjectSelector
     {
         Bounds bounds = new Bounds(position, Vector3.zero);
         Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
-        
+
         foreach (Renderer renderer in renderers)
         {
             bounds.Encapsulate(renderer.bounds);
@@ -166,3 +169,4 @@ public class AxisDragAndDropHandler : ObjectSelector
         return bounds;
     }
 }
+
