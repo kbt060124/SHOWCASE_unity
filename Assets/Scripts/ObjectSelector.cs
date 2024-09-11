@@ -40,7 +40,7 @@ public class ObjectSelector : MonoBehaviour
             {
                 if (obj == selectedObject)
                 {
-                    rb.isKinematic = false;
+                    rb.isKinematic = true;
                     rb.detectCollisions = true;
                 }
                 else
