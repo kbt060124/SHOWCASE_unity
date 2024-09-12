@@ -10,6 +10,7 @@ public class AxisDragAndDropHandler : ObjectSelector
     private GameObject wallRight;
     private GameObject wallLeft;
     private GameObject wallBack;
+    private GameObject wallFront; // 新しい壁を追加
     private GameObject ceiling;
     private GameObject floor;
 
@@ -19,6 +20,7 @@ public class AxisDragAndDropHandler : ObjectSelector
         wallRight = GameObject.FindGameObjectWithTag("WallRight");
         wallLeft = GameObject.FindGameObjectWithTag("WallLeft");
         wallBack = GameObject.FindGameObjectWithTag("WallBack");
+        wallFront = GameObject.FindGameObjectWithTag("WallFront"); // 新しい壁を検索
         ceiling = GameObject.FindGameObjectWithTag("Ceiling");
         floor = GameObject.FindGameObjectWithTag("Floor");
 
@@ -125,6 +127,7 @@ public class AxisDragAndDropHandler : ObjectSelector
         if (wallRight != null && objectBounds.max.x > wallRight.transform.position.x) return true;
         if (wallLeft != null && objectBounds.min.x < wallLeft.transform.position.x) return true;
         if (wallBack != null && objectBounds.max.z > wallBack.transform.position.z) return true;
+        if (wallFront != null && objectBounds.min.z < wallFront.transform.position.z) return true; // 前壁との衝突チェックを追加
         if (ceiling != null && objectBounds.max.y > ceiling.transform.position.y) return true;
 
         // 床との衝突チェック（オブジェクトを床の上に配置）

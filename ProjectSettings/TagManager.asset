@@ -12,6 +12,7 @@ TagManager:
   - WallBack
   - Ceiling
   - Floor
+  - WallFront
   layers:
   - Default
   - TransparentFX

@@ -84,6 +84,30 @@ public class ObjectSelector : MonoBehaviour
                         return true;
                     }
                 }
+                else
+                {
+                    // "Shelf"か"Item"タグが付いていないオブジェクトにrayがあたった場合
+                    if (selectedObject != null)
+                    {
+                        RemoveOutline(selectedObject);
+                    }
+                    selectedObject = null;
+                    Debug.Log("選択が解除されました");
+                    UpdateKinematicStates();
+                    return true;
+                }
+            }
+            else
+            {
+                // rayがどのオブジェクトにもあたらなかった場合
+                if (selectedObject != null)
+                {
+                    RemoveOutline(selectedObject);
+                }
+                selectedObject = null;
+                Debug.Log("選択が解除されました");
+                UpdateKinematicStates();
+                return true;
             }
         }
         return false;
