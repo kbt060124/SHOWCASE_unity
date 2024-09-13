@@ -2,82 +2,46 @@ using UnityEngine;
 
 public class TagsController : MonoBehaviour
 {
-    public static TagsController Instance { get; private set; }
+    public GameObject objectsParent;
 
-    private void Awake()
+    private void Start()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
+        // オブジェクトの参照を取得
+        objectsParent = GameObject.Find("Objects");
     }
 
-    public void RemoveTagsFromGroup(string groupName, string tagToRemove)
+    public void RemoveTags()
     {
-        GameObject objectsParent = GameObject.Find("Objects");
-        if (objectsParent != null)
-        {
-            Transform group = objectsParent.transform.Find(groupName);
-            if (group != null)
-            {
-                RemoveTagsFromChildren(group, tagToRemove);
-            }
-            else
-            {
-                Debug.LogWarning($"{groupName}が見つかりません。");
-            }
-        }
-        else
-        {
-            Debug.LogError("Objects親オブジェクトが見つかりません。");
-        }
+        RemoveTagsFromChildren(objectsParent.transform.Find("Items"), "Item");
+        RemoveTagsFromChildren(objectsParent.transform.Find("Shelves"), "Shelf");
     }
 
-    public void AddTagsToGroup(string groupName, string tagToAdd)
+    public void AddTags()
     {
-        GameObject objectsParent = GameObject.Find("Objects");
-        if (objectsParent != null)
-        {
-            Transform group = objectsParent.transform.Find(groupName);
-            if (group != null)
-            {
-                AddTagsToChildren(group, tagToAdd);
-            }
-            else
-            {
-                Debug.LogWarning($"{groupName}が見つかりません。");
-            }
-        }
-        else
-        {
-            Debug.LogError("Objects親オブジェクトが見つかりません。");
-        }
+        AddTagsToChildren(objectsParent.transform.Find("Items"), "Item");
+        AddTagsToChildren(objectsParent.transform.Find("Shelves"), "Shelf");
     }
 
-    private void RemoveTagsFromChildren(Transform parent, string tagToRemove)
+    private void RemoveTagsFromChildren(Transform parent, string tag)
     {
+        if (parent == null) return;
+
         foreach (Transform child in parent)
         {
-            if (child.CompareTag(tagToRemove))
+            if (child.CompareTag(tag))
             {
                 child.tag = "Untagged";
             }
         }
     }
 
-    private void AddTagsToChildren(Transform parent, string tagToAdd)
+    private void AddTagsToChildren(Transform parent, string tag)
     {
+        if (parent == null) return;
+
         foreach (Transform child in parent)
         {
-            if (child.CompareTag("Untagged"))
-            {
-                child.tag = tagToAdd;
-            }
+            child.tag = tag;
         }
     }
 }
