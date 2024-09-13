@@ -48,7 +48,7 @@ public class PanelPositioner : MonoBehaviour
 
         // パネルをWarehouseオブジェクト内で全幅に広げ、下1/3に配置する
         panelRectTransform.anchorMin = new Vector2(0, 0);
-        panelRectTransform.anchorMax = new Vector2(1, 1f/3f);
+        panelRectTransform.anchorMax = new Vector2(1, 1f/4f);
         panelRectTransform.anchoredPosition = Vector2.zero;
         panelRectTransform.sizeDelta = Vector2.zero;
 
