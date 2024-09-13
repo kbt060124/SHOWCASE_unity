@@ -13,8 +13,9 @@ public class PanelController : MonoBehaviour
     {
         closeButton.onClick.AddListener(HidePanel);
         showButton.onClick.AddListener(ShowPanel);
-        showButton.gameObject.SetActive(false);
         Debug.Log("PanelController: 初期化完了");
+
+        HidePanel();
     }
 
     private void HidePanel()
