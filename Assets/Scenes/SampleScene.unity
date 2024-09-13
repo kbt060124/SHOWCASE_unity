@@ -379,7 +379,7 @@ GameObject:
   - component: {fileID: 321379667}
   m_Layer: 5
   m_Name: Delete
-  m_TagString: Untagged
+  m_TagString: EditButton
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -808,6 +808,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   outlineResources: {fileID: 11400000, guid: 8f02d2d92b99b4d3a994b3546be9530b, type: 2}
+  buttonController: {fileID: 593829743}
 --- !u!1 &463643995
 GameObject:
   m_ObjectHideFlags: 0
@@ -882,7 +883,7 @@ GameObject:
   - component: {fileID: 489694575}
   m_Layer: 5
   m_Name: Axis
-  m_TagString: Untagged
+  m_TagString: EditButton
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1104,6 +1105,55 @@ MonoBehaviour:
   thumbnailsGridLayoutGroup: {fileID: 463643997}
   categoryButtonsContainer: {fileID: 1896044364}
   categoryButtonSize: {x: 250, y: 40}
+--- !u!1 &593829741
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 593829742}
+  - component: {fileID: 593829743}
+  m_Layer: 0
+  m_Name: EditButtonsController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &593829742
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 593829741}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1580073483}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &593829743
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 593829741}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d68d524712262440293b76200ba932c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  resizeButton: {fileID: 1871327340}
+  rotateButton: {fileID: 1973206078}
+  axisButton: {fileID: 489694575}
+  saveButton: {fileID: 943491337}
+  deleteButton: {fileID: 321379667}
 --- !u!1 &599231656
 GameObject:
   m_ObjectHideFlags: 0
@@ -1541,6 +1591,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   outlineResources: {fileID: 0}
+  buttonController: {fileID: 0}
 --- !u!4 &864921905
 Transform:
   m_ObjectHideFlags: 0
@@ -1570,7 +1621,7 @@ GameObject:
   - component: {fileID: 943491337}
   m_Layer: 5
   m_Name: Save
-  m_TagString: Untagged
+  m_TagString: EditButton
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2025,7 +2076,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1073638918}
   m_Layer: 0
-  m_Name: Button
+  m_Name: EditButtons
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2165,6 +2216,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   outlineResources: {fileID: 0}
+  buttonController: {fileID: 0}
 --- !u!1 &1150420639
 GameObject:
   m_ObjectHideFlags: 0
@@ -2886,6 +2938,7 @@ Transform:
   - {fileID: 1049164932}
   - {fileID: 1073638918}
   - {fileID: 376123897}
+  - {fileID: 593829742}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1619903478
@@ -2964,6 +3017,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   outlineResources: {fileID: 0}
+  buttonController: {fileID: 0}
 --- !u!1 &1660233239
 GameObject:
   m_ObjectHideFlags: 0
@@ -3227,6 +3281,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   outlineResources: {fileID: 0}
+  buttonController: {fileID: 0}
 --- !u!1 &1871327338
 GameObject:
   m_ObjectHideFlags: 0
@@ -3241,7 +3296,7 @@ GameObject:
   - component: {fileID: 1871327340}
   m_Layer: 5
   m_Name: Resize
-  m_TagString: Untagged
+  m_TagString: EditButton
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3753,7 +3808,7 @@ GameObject:
   - component: {fileID: 1973206078}
   m_Layer: 5
   m_Name: Rotate
-  m_TagString: Untagged
+  m_TagString: EditButton
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
