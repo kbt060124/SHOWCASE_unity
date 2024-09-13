@@ -20,6 +20,10 @@ public class CanvasManager : MonoBehaviour
         studioCanvas.gameObject.SetActive(false);
         // RemoveTags()を呼び出す
         tagsController.RemoveTags();
+
+        // mainstageCameraの位置と回転を設定
+        mainstageCamera.transform.position = new Vector3(0f, 1.65f, -1.75f);
+        mainstageCamera.transform.rotation = Quaternion.identity;
     }
 
     public void ActiveStudio()
@@ -30,5 +34,8 @@ public class CanvasManager : MonoBehaviour
         studioCanvas.gameObject.SetActive(true);
         // AddTags()を呼び出す
         tagsController.AddTags();
+
+        studioCamera.transform.position = new Vector3(0f, 1.65f, -1.75f);
+        studioCamera.transform.rotation = Quaternion.identity;
     }
 }
