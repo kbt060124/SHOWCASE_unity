@@ -141,9 +141,6 @@ public class PanelPositioner : MonoBehaviour
         // ボタンの位置を設定（右上に配置し、上と右に余白を設定）
         closeButtonRectTransform.anchoredPosition = new Vector2(-20, -20);
 
-        // ボタンのサイズを設定
-        closeButtonRectTransform.sizeDelta = new Vector2(50, 50);
-
         // ボタンを最前面に表示
         closeButtonRectTransform.SetAsLastSibling();
 
