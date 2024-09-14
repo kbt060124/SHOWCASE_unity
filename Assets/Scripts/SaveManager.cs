@@ -2,7 +2,8 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using System.Collections;  // Added this line
+using System.Collections;
+using System.Linq; // この行を追加
 
 [System.Serializable]
 public class SerializableVector3
@@ -149,6 +150,16 @@ public class SaveManager : MonoBehaviour
 
     public void LoadScene()
     {
+        // 既存のオブジェクトをクリア
+        GameObject existingObjects = GameObject.Find("Objects");
+        if (existingObjects != null)
+        {
+            DestroyImmediate(existingObjects);
+        }
+
+        // 新しいObjectsコンテナを作成
+        existingObjects = new GameObject("Objects");
+
         string savePath = Path.Combine(Application.persistentDataPath, SAVE_FILE_NAME);
         if (!File.Exists(savePath))
         {
@@ -158,13 +169,6 @@ public class SaveManager : MonoBehaviour
 
         string json = File.ReadAllText(savePath);
         SceneData sceneData = JsonUtility.FromJson<SceneData>(json);
-
-        // 既存のObjectsを取得
-        GameObject existingObjects = GameObject.Find("Objects");
-        if (existingObjects == null)
-        {
-            existingObjects = new GameObject("Objects");
-        }
 
         // 既存のItems, Shelvesフォルダを取得または作成
         GameObject itemsFolder = existingObjects.transform.Find("Items")?.gameObject;
@@ -194,6 +198,9 @@ public class SaveManager : MonoBehaviour
                 newObj.transform.localRotation = objData.rotation.ToQuaternion();
                 newObj.transform.localScale = objData.scale.ToVector3();
 
+                // レイヤーをDefaultに設定
+                newObj.layer = LayerMask.NameToLayer("Default");
+
                 // タグを付与
                 if (objData.prefabPath.StartsWith("Items/"))
                 {
@@ -209,6 +216,17 @@ public class SaveManager : MonoBehaviour
                 {
                     newObj.tag = "SceneObject";
                     newObj.transform.SetParent(existingObjects.transform);
+                }
+
+                // オブジェクトの詳細情報をログ出力
+                Debug.Log($"生成されたオブジェクト: {newObj.name}, タグ: {newObj.tag}, レイヤー: {LayerMask.LayerToName(newObj.layer)}");
+                Debug.Log($"位置: {newObj.transform.position}, 回転: {newObj.transform.rotation.eulerAngles}, スケール: {newObj.transform.localScale}");
+                Debug.Log($"コンポーネント: {string.Join(", ", newObj.GetComponents<Component>().Select(c => c.GetType().Name))}");
+
+                // Colliderがな��場合は追加
+                if (newObj.GetComponent<Collider>() == null)
+                {
+                    newObj.AddComponent<BoxCollider>();
                 }
 
                 instantiatedObjects.Add(newObj);
@@ -266,4 +284,27 @@ public class SaveManager : MonoBehaviour
         physicsAssigner.AddPhysicsToChildren();
         Debug.Log("読み込まれたオブジェクトに物理判定の追加を試みました。");
     }
+
+    private void Awake()
+    {
+        LoadScene();
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void OnAfterSceneLoadRuntimeMethod()
+    {
+        SaveManager saveManager = FindObjectOfType<SaveManager>();
+        if (saveManager == null)
+        {
+            GameObject saveManagerObject = new GameObject("SaveManager");
+            saveManager = saveManagerObject.AddComponent<SaveManager>();
+        }
+        saveManager.LoadScene();
+    }
+
+    // Startメソッドを削除または無効化
+    // private void Start()
+    // {
+    //     LoadScene();
+    // }
 }
