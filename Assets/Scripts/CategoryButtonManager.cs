@@ -11,7 +11,14 @@ public class CategoryButtonManager : MonoBehaviour
     {
         foreach (var button in categoryButtons)
         {
-            button.GetButton().onClick.AddListener(() => OnCategoryButtonClicked(button));
+            if (button != null)
+            {
+                button.GetButton().onClick.AddListener(() => OnCategoryButtonClicked(button));
+            }
+            else
+            {
+                Debug.LogError("CategoryButton is null!");
+            }
         }
     }
 

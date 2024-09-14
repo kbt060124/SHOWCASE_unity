@@ -48,7 +48,7 @@ public class PanelPositioner : MonoBehaviour
 
         // パネルをWarehouseオブジェクト内で全幅に広げ、下1/3に配置する
         panelRectTransform.anchorMin = new Vector2(0, 0);
-        panelRectTransform.anchorMax = new Vector2(1, 1f/3f);
+        panelRectTransform.anchorMax = new Vector2(1, 1f/4f);
         panelRectTransform.anchoredPosition = Vector2.zero;
         panelRectTransform.sizeDelta = Vector2.zero;
 
@@ -140,9 +140,6 @@ public class PanelPositioner : MonoBehaviour
 
         // ボタンの位置を設定（右上に配置し、上と右に余白を設定）
         closeButtonRectTransform.anchoredPosition = new Vector2(-20, -20);
-
-        // ボタンのサイズを設定
-        closeButtonRectTransform.sizeDelta = new Vector2(50, 50);
 
         // ボタンを最前面に表示
         closeButtonRectTransform.SetAsLastSibling();

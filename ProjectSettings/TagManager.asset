@@ -12,6 +12,8 @@ TagManager:
   - WallBack
   - Ceiling
   - Floor
+  - WallFront
+  - EditButton
   layers:
   - Default
   - TransparentFX

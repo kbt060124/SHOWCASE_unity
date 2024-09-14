@@ -29,20 +29,21 @@ public class Importer : MonoBehaviour
         GameObject wallRight = GameObject.Find("WallRight");
         GameObject wallLeft = GameObject.Find("WallLeft");
         GameObject wallBack = GameObject.Find("WallBack");
+        GameObject wallFront = GameObject.Find("WallFront"); // 新しい壁を追加
         GameObject ceiling = GameObject.Find("Ceiling");
         GameObject floor = GameObject.Find("Floor");
 
-        if (wallRight && wallLeft && wallBack && ceiling && floor)
+        if (wallRight && wallLeft && wallBack && wallFront && ceiling && floor)
         {
             roomCenter = new Vector3(
                 (wallRight.transform.position.x + wallLeft.transform.position.x) / 2f,
                 (ceiling.transform.position.y + floor.transform.position.y) / 2f,
-                (wallBack.transform.position.z + Camera.main.transform.position.z) / 2f
+                (wallBack.transform.position.z + wallFront.transform.position.z) / 2f // 前壁と後壁の中間点を使用
             );
             roomSize = new Vector3(
                 Vector3.Distance(wallRight.transform.position, wallLeft.transform.position),
                 Vector3.Distance(ceiling.transform.position, floor.transform.position),
-                Vector3.Distance(wallBack.transform.position, Camera.main.transform.position)
+                Vector3.Distance(wallBack.transform.position, wallFront.transform.position) // 前壁と後壁の距離を使用
             );
             Debug.Log($"計算されたroomCenter: {roomCenter}");
             Debug.Log($"計算されたroomSize: {roomSize}");

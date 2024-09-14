@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic; // この行を追加
 using UnityFx.Outline;
+using UnityEngine.EventSystems; // この行を追加
 
 public class ObjectSelector : MonoBehaviour
 {
@@ -10,6 +11,9 @@ public class ObjectSelector : MonoBehaviour
 
     [SerializeField]
     private OutlineResources outlineResources; // インスペクターでアサインする
+
+    [SerializeField]
+    private ButtonController buttonController;
 
     private void SetKinematicState(GameObject obj, bool isKinematic)
     {
@@ -40,7 +44,7 @@ public class ObjectSelector : MonoBehaviour
             {
                 if (obj == selectedObject)
                 {
-                    rb.isKinematic = false;
+                    rb.isKinematic = true;
                     rb.detectCollisions = true;
                 }
                 else
@@ -56,6 +60,12 @@ public class ObjectSelector : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
+            // UIの要素がクリックされた場合は、オブジェクト選択を行わない
+            if (EventSystem.current.IsPointerOverGameObject())
+            {
+                return false;
+            }
+
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
@@ -81,10 +91,61 @@ public class ObjectSelector : MonoBehaviour
                         AddOutline(selectedObject);
 
                         UpdateKinematicStates();
+                        // ButtonControllerのObjectSelected関数を呼び出す
+                        if (buttonController != null)
+                        {
+                            buttonController.ObjectSelected();
+                        }
+                        else
+                        {
+                            Debug.LogWarning("ButtonController is not assigned in ObjectSelector.");
+                        }
+
                         return true;
                     }
                 }
+                else
+                {
+                    DeselectObject();
+                    return true;
+                }
             }
+            else
+            {
+                DeselectObject();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void DeselectObject()
+    {
+        if (selectedObject != null)
+        {
+            RemoveOutline(selectedObject);
+        }
+        selectedObject = null;
+        Debug.Log("選択が解除されました");
+        UpdateKinematicStates();
+
+        // EditButtonが押されたかどうかをチェック
+        if (buttonController != null && !IsEditButtonPressed())
+        {
+            buttonController.ObjectDeselected();
+        }
+        else
+        {
+            Debug.LogWarning("ButtonController is not assigned in ObjectSelector or EditButton was pressed.");
+        }
+    }
+
+    // EditButtonが押されたかどうかをチェックする新しいメソッド
+    private bool IsEditButtonPressed()
+    {
+        if (EventSystem.current.currentSelectedGameObject != null)
+        {
+            return EventSystem.current.currentSelectedGameObject.CompareTag("EditButton");
         }
         return false;
     }
@@ -127,6 +188,24 @@ public class ObjectSelector : MonoBehaviour
             {
                 Debug.LogError("DefaultOutlineResources not found. Please create and assign an OutlineResources asset.");
             }
+        }
+    }
+
+    private void Start()
+    {
+        if (buttonController == null)
+        {
+            buttonController = FindObjectOfType<ButtonController>();
+            if (buttonController == null)
+            {
+                Debug.LogError("ButtonController not found in the scene. Please assign it manually.");
+            }
+        }
+
+        // 初期状態ではオブジェクトが選択されていないので、ObjectDeselectedを呼び出す
+        if (buttonController != null)
+        {
+            buttonController.ObjectDeselected();
         }
     }
 }
