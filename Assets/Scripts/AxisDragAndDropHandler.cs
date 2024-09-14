@@ -89,12 +89,16 @@ public class AxisDragAndDropHandler : ObjectSelector
             }
             else
             {
-                // XY平面での移動（新しいコード）
+                // XY平面での移動（Y座標のみ操作）
                 Plane xyPlane = new Plane(Camera.main.transform.forward, selectedObject.transform.position);
                 if (xyPlane.Raycast(ray, out float distance))
                 {
                     Vector3 hitPoint = ray.GetPoint(distance);
-                    Vector3 newPosition = new Vector3(hitPoint.x, hitPoint.y, selectedObject.transform.position.z);
+                    Vector3 newPosition = new Vector3(
+                        selectedObject.transform.position.x,
+                        hitPoint.y,
+                        selectedObject.transform.position.z
+                    );
                     if (!IsColliding(newPosition))
                     {
                         selectedObject.transform.position = newPosition;
