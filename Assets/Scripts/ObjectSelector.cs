@@ -60,6 +60,12 @@ public class ObjectSelector : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
+            // UIの要素がクリックされた場合は、オブジェクト選択を行わない
+            if (EventSystem.current.IsPointerOverGameObject())
+            {
+                return false;
+            }
+
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
