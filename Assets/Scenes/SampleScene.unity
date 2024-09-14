@@ -586,6 +586,7 @@ MonoBehaviour:
   studioCamera: {fileID: 963194227}
   studioCanvas: {fileID: 1048680042}
   tagsController: {fileID: 1084398336}
+  objectSelector: {fileID: 0}
 --- !u!1 &321379665
 GameObject:
   m_ObjectHideFlags: 0
@@ -2725,8 +2726,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5aad8496f5cb947528b564eba555e3b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  outlineResources: {fileID: 0}
-  buttonController: {fileID: 0}
+  outlineResources: {fileID: 11400000, guid: 8f02d2d92b99b4d3a994b3546be9530b, type: 2}
+  buttonController: {fileID: 593829743}
 --- !u!4 &864921905
 Transform:
   m_ObjectHideFlags: 0
@@ -3377,7 +3378,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 17cb607c3c3944e35ba0df9669388969, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectsParent: {fileID: 599231656}
+  objectsParent: {fileID: 0}
 --- !u!4 &1084398337
 Transform:
   m_ObjectHideFlags: 0
@@ -3505,8 +3506,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1753c5e7ff1b64727a98c8e653fec641, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  outlineResources: {fileID: 0}
-  buttonController: {fileID: 0}
+  outlineResources: {fileID: 11400000, guid: 8f02d2d92b99b4d3a994b3546be9530b, type: 2}
+  buttonController: {fileID: 593829743}
 --- !u!1 &1127951855
 GameObject:
   m_ObjectHideFlags: 0
@@ -4803,8 +4804,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b7a533a33028947dcb1a2d7673c30c76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  outlineResources: {fileID: 0}
-  buttonController: {fileID: 0}
+  outlineResources: {fileID: 11400000, guid: 8f02d2d92b99b4d3a994b3546be9530b, type: 2}
+  buttonController: {fileID: 593829743}
 --- !u!1 &1648463809
 GameObject:
   m_ObjectHideFlags: 0
@@ -5264,8 +5265,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8283dd507ce374c87b204afcc7cd9060, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  outlineResources: {fileID: 0}
-  buttonController: {fileID: 0}
+  outlineResources: {fileID: 11400000, guid: 8f02d2d92b99b4d3a994b3546be9530b, type: 2}
+  buttonController: {fileID: 593829743}
 --- !u!224 &1846803218 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8170153791668043268, guid: 0d230cc8be529a542a08cb878ab14b18, type: 3}

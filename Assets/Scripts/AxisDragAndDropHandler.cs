@@ -13,6 +13,7 @@ public class AxisDragAndDropHandler : ObjectSelector
     private GameObject wallFront; // 新しい壁を追加
     private GameObject ceiling;
     private GameObject floor;
+    private CanvasManager canvasManager;
 
     void Start()
     {
@@ -27,10 +28,20 @@ public class AxisDragAndDropHandler : ObjectSelector
         // 初期状態をXZ軸モードに設定
         OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.AxisDragAndDrop);
         Debug.Log("初期状態：XZ軸モードをオンにしました");
+
+        // CanvasManagerの参照を取得
+        canvasManager = FindObjectOfType<CanvasManager>();
+        if (canvasManager == null)
+        {
+            Debug.LogError("CanvasManagerが見つかりません。");
+        }
     }
 
     public void ToggleAxisMode()
     {
+        // Mainstageがアクティブな場合は何もしない
+        if (canvasManager != null && canvasManager.isMainstageActive) return;
+
         OperationModeManager.OperationMode currentMode = OperationModeManager.Instance.GetCurrentMode();
 
         if (currentMode != OperationModeManager.OperationMode.AxisDragAndDrop)
@@ -48,6 +59,9 @@ public class AxisDragAndDropHandler : ObjectSelector
 
     void Update()
     {
+        // Mainstageがアクティブな場合は何もしない
+        if (canvasManager != null && canvasManager.isMainstageActive) return;
+
         if (OperationModeManager.Instance.GetCurrentMode() != OperationModeManager.OperationMode.AxisDragAndDrop) return;
 
         if (Input.GetMouseButtonDown(0))
@@ -75,12 +89,16 @@ public class AxisDragAndDropHandler : ObjectSelector
             }
             else
             {
-                // XY平面での移動（新しいコード）
+                // XY平面での移動（Y座標のみ操作）
                 Plane xyPlane = new Plane(Camera.main.transform.forward, selectedObject.transform.position);
                 if (xyPlane.Raycast(ray, out float distance))
                 {
                     Vector3 hitPoint = ray.GetPoint(distance);
-                    Vector3 newPosition = new Vector3(hitPoint.x, hitPoint.y, selectedObject.transform.position.z);
+                    Vector3 newPosition = new Vector3(
+                        selectedObject.transform.position.x,
+                        hitPoint.y,
+                        selectedObject.transform.position.z
+                    );
                     if (!IsColliding(newPosition))
                     {
                         selectedObject.transform.position = newPosition;
@@ -119,6 +137,9 @@ public class AxisDragAndDropHandler : ObjectSelector
 
     private bool IsColliding(Vector3 newPosition)
     {
+        // Mainstageがアクティブな場合は衝突していないとみなす
+        if (canvasManager != null && canvasManager.isMainstageActive) return false;
+
         if (selectedObject == null) return false;
 
         Bounds objectBounds = GetObjectBounds(selectedObject, newPosition);
