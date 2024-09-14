@@ -27,6 +27,7 @@ MemoryCaptures/
 Build/
 Builds/
 Packages/com.unity.package-manager-ui
+default-2022.dwlt
 
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta

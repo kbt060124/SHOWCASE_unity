@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee8a04a6152a2416593f53b674255c8c, type: 3}
+  m_Name: StudioThumbnailLayout
+  m_EditorClassIdentifier: 
+  cellSize: {x: 80, y: 80}
+  spacing: {x: 40, y: 10}
+  startCorner: 0
+  startAxis: 0
+  childAlignment: 4
+  constraint: 0
