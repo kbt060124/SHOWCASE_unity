@@ -1,6 +1,4 @@
-using Autodesk.Fbx;
 using UnityEngine;
-using UnityEditor;
 using System.IO;
 using System.Collections.Generic;
 using UnityEngine.UI;
@@ -8,20 +6,17 @@ using System.Linq;
 
 public class Importer : MonoBehaviour
 {
-
-    public Transform panelTransform; // サムネイルを表示するパネルのTransform
+    public Transform panelTransform;
 
     private Dictionary<string, Texture2D> thumbnailCache = new Dictionary<string, Texture2D>();
-
     private Vector3 roomCenter;
     private Vector3 roomSize;
-
     private string fileName;
 
     void Start()
     {
         CalculateRoomCenterAndSize();
-        LoadThumbnailsFromFolder("Assets/Files");
+        LoadThumbnailsFromResources("Items");
     }
 
     private void CalculateRoomCenterAndSize()
@@ -29,7 +24,7 @@ public class Importer : MonoBehaviour
         GameObject wallRight = GameObject.Find("WallRight");
         GameObject wallLeft = GameObject.Find("WallLeft");
         GameObject wallBack = GameObject.Find("WallBack");
-        GameObject wallFront = GameObject.Find("WallFront"); // 新しい壁を追加
+        GameObject wallFront = GameObject.Find("WallFront");
         GameObject ceiling = GameObject.Find("Ceiling");
         GameObject floor = GameObject.Find("Floor");
 
@@ -38,12 +33,12 @@ public class Importer : MonoBehaviour
             roomCenter = new Vector3(
                 (wallRight.transform.position.x + wallLeft.transform.position.x) / 2f,
                 (ceiling.transform.position.y + floor.transform.position.y) / 2f,
-                (wallBack.transform.position.z + wallFront.transform.position.z) / 2f // 前壁と後壁の中間点を使用
+                (wallBack.transform.position.z + wallFront.transform.position.z) / 2f
             );
             roomSize = new Vector3(
                 Vector3.Distance(wallRight.transform.position, wallLeft.transform.position),
                 Vector3.Distance(ceiling.transform.position, floor.transform.position),
-                Vector3.Distance(wallBack.transform.position, wallFront.transform.position) // 前壁と後壁の距離を使用
+                Vector3.Distance(wallBack.transform.position, wallFront.transform.position)
             );
             Debug.Log($"計算されたroomCenter: {roomCenter}");
             Debug.Log($"計算されたroomSize: {roomSize}");
@@ -58,32 +53,10 @@ public class Importer : MonoBehaviour
         Debug.Log($"最終的なroomSize: x={roomSize.x}, y={roomSize.y}, z={roomSize.z}");
     }
 
-    public void LoadThumbnailsFromFolder(string folderPath)
+    public void LoadThumbnailsFromResources(string folderPath)
     {
         ClearThumbnails();
-        string[] fbxFolders = Directory.GetDirectories(folderPath);
-        foreach (string subFolderPath in fbxFolders)
-        {
-            string thumbnailPath = Path.Combine(subFolderPath, "thumbnail.png");
-            if (File.Exists(thumbnailPath))
-            {
-                Texture2D thumbnail = AssetDatabase.LoadAssetAtPath<Texture2D>(thumbnailPath);
-                if (thumbnail != null)
-                {
-                    string fbxPath = Directory.GetFiles(subFolderPath, "*.fbx").FirstOrDefault();
-                    if (fbxPath != null)
-                    {
-                        thumbnailCache[fbxPath] = thumbnail;
-                        CreateThumbnailButton(fbxPath, thumbnail);
-                        Debug.Log($"Created thumbnail for: {fbxPath}");
-                    }
-                }
-            }
-            else
-            {
-                Debug.LogWarning($"Thumbnail not found in: {subFolderPath}");
-            }
-        }
+        LoadThumbnailsFromFolder(folderPath);
     }
 
     private void ClearThumbnails()
@@ -95,7 +68,17 @@ public class Importer : MonoBehaviour
         }
     }
 
-    void CreateThumbnailButton(string fbxPath, Texture2D thumbnail)
+    public void LoadThumbnailsFromFolder(string folderPath)
+    {
+        Texture2D[] thumbnails = Resources.LoadAll<Texture2D>(folderPath);
+        foreach (Texture2D thumbnail in thumbnails)
+        {
+            string prefabPath = $"{folderPath}/{Path.GetFileNameWithoutExtension(thumbnail.name)}";
+            CreateThumbnailButton(prefabPath, thumbnail);
+        }
+    }
+
+    void CreateThumbnailButton(string prefabPath, Texture2D thumbnail)
     {
         if (panelTransform == null)
         {
@@ -117,7 +100,7 @@ public class Importer : MonoBehaviour
 
         // RectTransformを追加
         RectTransform rectTransform = thumbnailObj.AddComponent<RectTransform>();
-        rectTransform.sizeDelta = new Vector2(100, 100); // サイズを切に調整
+        rectTransform.sizeDelta = new Vector2(100, 100);
 
         // Imageコンポーネントを追加
         Image thumbnailImage = thumbnailObj.AddComponent<Image>();
@@ -125,7 +108,7 @@ public class Importer : MonoBehaviour
 
         // Buttonコンポーネントを追加
         Button button = thumbnailObj.AddComponent<Button>();
-        button.onClick.AddListener(() => ImportScene(fbxPath));
+        button.onClick.AddListener(() => ImportScene(prefabPath));
 
         // ボタンの色を設定（オプション）
         ColorBlock colors = button.colors;
@@ -134,177 +117,69 @@ public class Importer : MonoBehaviour
         button.colors = colors;
     }
 
-    protected void ImportScene(string fileName)
+    protected void ImportScene(string prefabPath)
     {
-        this.fileName = fileName;
+        this.fileName = prefabPath;
 
-        using (FbxManager fbxManager = FbxManager.Create())
+        GameObject prefab = Resources.Load<GameObject>(prefabPath);
+        if (prefab == null)
         {
-            // configure IO settings.
-            fbxManager.SetIOSettings(FbxIOSettings.Create(fbxManager, Globals.IOSROOT));
-
-            // Import the scene to make sure file is valid
-            using (FbxImporter importer = FbxImporter.Create(fbxManager, "myImporter"))
-            {
-                // Initialize the importer.
-                bool status = importer.Initialize(fileName, -1, fbxManager.GetIOSettings());
-                if (!status)
-                {
-                    Debug.LogError("Failed to initialize importer with file: " + fileName);
-                    return;
-                }
-
-                // Create a new scene so it can be populated by the imported file.
-                FbxScene scene = FbxScene.Create(fbxManager, "myScene");
-
-                // Import the contents of the file into the scene.
-                if (!importer.Import(scene))
-                {
-                    Debug.LogError("Failed to import scene from file: " + fileName);
-                    return;
-                }
-
-                // Export the scene to the same path
-                using (FbxExporter exporter = FbxExporter.Create(fbxManager, "myExporter"))
-                {
-                    if (!exporter.Initialize(fileName, -1, fbxManager.GetIOSettings()))
-                    {
-                        Debug.LogError("Failed to initialize exporter with path: " + fileName);
-                        return;
-                    }
-
-                    if (!exporter.Export(scene))
-                    {
-                        Debug.LogError("Failed to export scene to path: " + fileName);
-                    }
-                    else
-                    {
-                        Debug.Log("Successfully exported scene to path: " + fileName);
-                    }
-                }
-            }
+            Debug.LogError($"Failed to load prefab: {prefabPath}");
+            return;
         }
 
-        // FBXファイルをインポートしてPrefabを生成
-        AssetDatabase.Refresh();
-        GameObject importedObject = AssetDatabase.LoadAssetAtPath<GameObject>(fileName);
-        if (importedObject != null)
+        GameObject parentObject = GameObject.Find("Objects");
+        if (parentObject == null)
         {
-            // Prefabの保存先パスを設定
-            string prefabName = Path.GetFileNameWithoutExtension(fileName) + ".prefab";
-            string prefabPath;
-            if (fileName.StartsWith("Assets/Files"))
-            {
-                prefabPath = "Assets/Resources/Items/" + prefabName;
-            }
-            else if (fileName.StartsWith("Assets/Shelves"))
-            {
-                prefabPath = "Assets/Resources/Shelves/" + prefabName;
-            }
-            else
-            {
-                prefabPath = "Assets/Resources/" + prefabName;
-            }
+            parentObject = new GameObject("Objects");
+        }
 
-            // フォルダが存在しない場合は作成
-            Directory.CreateDirectory(Path.GetDirectoryName(prefabPath));
+        GameObject itemsFolder = GetOrCreateFolder(parentObject, "Items");
+        GameObject shelvesFolder = GetOrCreateFolder(parentObject, "Shelves");
 
-            // Prefabを生成
-            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(importedObject, prefabPath);
-            if (prefab != null)
-            {
-                GameObject parentObject = GameObject.Find("Objects");
-                if (parentObject == null)
-                {
-                    parentObject = new GameObject("Objects");
-                }
+        GameObject instance = Instantiate(prefab);
+        instance.name = Path.GetFileNameWithoutExtension(prefabPath);
 
-                GameObject itemsFolder = parentObject.transform.Find("Items")?.gameObject;
-                if (itemsFolder == null)
-                {
-                    itemsFolder = new GameObject("Items");
-                    itemsFolder.transform.SetParent(parentObject.transform);
-                }
-
-                GameObject shelvesFolder = parentObject.transform.Find("Shelves")?.gameObject;
-                if (shelvesFolder == null)
-                {
-                    shelvesFolder = new GameObject("Shelves");
-                    shelvesFolder.transform.SetParent(parentObject.transform);
-                }
-
-                // 生成したPrefabを元にGameObjectをインスタンス化
-                GameObject instance = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
-                instance.name = Path.GetFileNameWithoutExtension(fileName);
-
-                // タグを付けてフォルダに配置
-                if (fileName.StartsWith("Assets/Shelves"))
-                {
-                    instance.tag = "Shelf";
-                    instance.transform.SetParent(shelvesFolder.transform);
-                }
-                else if (fileName.StartsWith("Assets/Files"))
-                {
-                    instance.tag = "Item";
-                    instance.transform.SetParent(itemsFolder.transform);
-                }
-                else
-                {
-                    instance.tag = "SceneObject";
-                    instance.transform.SetParent(parentObject.transform);
-                }
-
-                Debug.Log($"タグを付けました: {instance.name} - タグ: {instance.tag} - パス: {fileName}");
-
-                // オブジェクトの位置を調整
-                PositionObjectInFrontOfCamera(instance);
-
-                Debug.Log("Successfully added imported object to the scene: " + instance.name);
-
-                // テクスチャを適用する
-                ApplyTextureToObject(instance, fileName);
-
-                // PhysicsAssignerを使用して物理判定を付与する
-                PhysicsAssigner physicsAssigner = parentObject.AddComponent<PhysicsAssigner>();
-                physicsAssigner.AddPhysicsToChildren();
-            }
-            else
-            {
-                Debug.LogError("Failed to create prefab from imported object: " + fileName);
-            }
+        if (prefabPath.StartsWith("Shelves/"))
+        {
+            instance.tag = "Shelf";
+            instance.transform.SetParent(shelvesFolder.transform);
+        }
+        else if (prefabPath.StartsWith("Items/"))
+        {
+            instance.tag = "Item";
+            instance.transform.SetParent(itemsFolder.transform);
         }
         else
         {
-            Debug.LogError("Failed to load imported object from path: " + fileName);
+            instance.tag = "SceneObject";
+            instance.transform.SetParent(parentObject.transform);
         }
+
+        Debug.Log($"タグを付けました: {instance.name} - タグ: {instance.tag} - パス: {prefabPath}");
+
+        PositionObjectInFrontOfCamera(instance);
+
+        Debug.Log($"Successfully added imported object to the scene: {instance.name}");
+
+        PhysicsAssigner physicsAssigner = parentObject.GetComponent<PhysicsAssigner>();
+        if (physicsAssigner == null)
+        {
+            physicsAssigner = parentObject.AddComponent<PhysicsAssigner>();
+        }
+        physicsAssigner.AddPhysicsToChildren();
     }
 
-    // テクスチャ適用のためのヘルパーメソッド
-    private void ApplyTextureToObject(GameObject obj, string fbxPath)
+    private GameObject GetOrCreateFolder(GameObject parent, string folderName)
     {
-        string fbmFolderPath = Path.ChangeExtension(fbxPath, "fbm");
-        string texturePath = Path.Combine(fbmFolderPath, "texture");
-        if (Directory.Exists(fbmFolderPath) && File.Exists(texturePath))
+        Transform folderTransform = parent.transform.Find(folderName);
+        if (folderTransform == null)
         {
-            Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
-            if (texture != null)
-            {
-                Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
-                foreach (Renderer renderer in renderers)
-                {
-                    renderer.material.mainTexture = texture;
-                }
-                Debug.Log("Applied texture to imported object: " + obj.name);
-            }
-            else
-            {
-                Debug.LogWarning("Texture file found but could not be loaded: " + texturePath);
-            }
+            GameObject folder = new GameObject(folderName);
+            folder.transform.SetParent(parent.transform);
+            return folder;
         }
-        else
-        {
-            Debug.LogWarning("Texture file not found for: " + obj.name);
-        }
+        return folderTransform.gameObject;
     }
 
     private void PositionObjectInFrontOfCamera(GameObject obj)
@@ -312,7 +187,6 @@ public class Importer : MonoBehaviour
         Bounds bounds = CalculateBounds(obj);
         Vector3 originalScale = obj.transform.localScale;
 
-        // スケーリングの計算
         float minAllowedScale = roomSize.y * 0.05f;
         float maxAllowedScale = roomSize.y * 0.5f;
         float scaleFactor = Mathf.Min(
@@ -321,22 +195,17 @@ public class Importer : MonoBehaviour
             roomSize.z / (bounds.size.z * 2)
         );
 
-        // 最小スケールを設定
         scaleFactor = Mathf.Max(scaleFactor, minAllowedScale / Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z));
 
-        // Itemタグがついたオブジェクトの場合、スケール係数をさらに半分にする
         if (obj.CompareTag("Item"))
         {
             scaleFactor *= 0.5f;
         }
 
-        // スケールを適用
         obj.transform.localScale = originalScale * scaleFactor;
 
-        // バウンディングボックスを再計算
         bounds = CalculateBounds(obj);
 
-        // オブジェクトを部屋の中心に配置し、床の上に置く
         float yOffset = bounds.extents.y;
         obj.transform.position = new Vector3(roomCenter.x, roomCenter.y - roomSize.y / 2 + yOffset, roomCenter.z);
 
@@ -352,11 +221,4 @@ public class Importer : MonoBehaviour
         }
         return bounds;
     }
-
-    // public void ImportSV15PBasketball()
-    // {
-    //     Debug.Log("ImportSV15PBasketball called"); // Added debug log
-    //     string fileName = "Assets/Files/SV-15P Basketball.fbx"; // Import source path and destination path are the same
-    //     ImportScene(fileName);
-    // }
 }

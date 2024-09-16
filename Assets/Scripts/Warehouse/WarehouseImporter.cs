@@ -1,7 +1,6 @@
 using UnityEngine;
 using System.IO;
-using UnityEditor;
-using System;
+using System.Linq;
 
 public class WarehouseImporter : MonoBehaviour
 {
@@ -25,71 +24,72 @@ public class WarehouseImporter : MonoBehaviour
                 Debug.LogError("ItemPanelが見つかりません。シーンにItemPanelを追加してください。");
             }
         }
-        ImportFirstThumbnail();
-    }
-
-    private void ImportFirstThumbnail()
-    {
-        string[] folderPaths = { "Assets/Files", "Assets/Shelves" };
-        foreach (string folderPath in folderPaths)
-        {
-            string[] thumbnailFiles = Directory.GetFiles(folderPath, "thumbnail.png", SearchOption.AllDirectories);
-            if (thumbnailFiles.Length > 0)
-            {
-                ImportScene(thumbnailFiles[0]);
-                return;
-            }
-        }
-        Debug.LogWarning("サムネイルが見つかりません。");
     }
 
     public void ImportScene(string thumbnailPath)
     {
+        Debug.Log($"ImportScene called with thumbnailPath: {thumbnailPath}");
+
         selectedThumbnailPath = thumbnailPath;
         
-        // 既存のオブジェクトを削除
-        GameObject existingObject = GameObject.Find("Objects");
-        if (existingObject != null)
-        {
-            DestroyImmediate(existingObject);
-        }
-
         if (string.IsNullOrEmpty(thumbnailPath))
         {
             Debug.LogError("無効なサムネイルパスです。");
             return;
         }
 
-        string directoryPath = Path.GetDirectoryName(thumbnailPath);
-        string[] fbxFiles = Directory.GetFiles(directoryPath, "*.fbx");
+        string[] pathParts = thumbnailPath.Split('/');
+        string category = pathParts[0]; // "Items" または "Shelves"
+        string folderName = pathParts[1]; // 数字のフォルダ名
 
-        if (fbxFiles.Length == 0)
+        Debug.Log($"Category: {category}, FolderName: {folderName}");
+
+        GameObject parentObject = GameObject.Find("Objects");
+        if (parentObject == null)
         {
-            Debug.LogError($"FBXファイルが見つかりません: {directoryPath}");
-            return;
+            parentObject = new GameObject("Objects");
         }
 
-        string fbxPath = fbxFiles[0]; // 最初に見つかったFBXファイルを使用
+        // 両方のカテゴリフォルダ内の既存のプレハブインスタンスを削除
+        ClearCategoryFolder(parentObject, "Items");
+        ClearCategoryFolder(parentObject, "Shelves");
 
-        GameObject prefab = CreatePrefabFromFBX(fbxPath);
+        // カテゴリフォルダを取得または作成
+        GameObject categoryFolder = GetOrCreateFolder(parentObject, category);
+
+        // フォルダ内のすべてのアセットを取得
+        UnityEngine.Object[] assets = Resources.LoadAll($"{category}/{folderName}");
+        Debug.Log($"Loaded assets count: {assets.Length}");
+        
+        // プレハブを見つける
+        GameObject prefab = null;
+        foreach (UnityEngine.Object asset in assets)
+        {
+            GameObject go = asset as GameObject;
+            if (go != null && IsPrefabLike(go))
+            {
+                prefab = go;
+                Debug.Log($"Found prefab: {go.name}");
+                break;
+            }
+        }
+
         if (prefab == null)
         {
-            Debug.LogError($"プレハブの作成に失敗しました: {fbxPath}");
+            Debug.LogError($"プレハブが見つかりません: {category}/{folderName}");
             return;
         }
 
-        GameObject instance = Instantiate(prefab);
+        GameObject instance = Instantiate(prefab, categoryFolder.transform);
         instance.name = prefab.name;
+        instance.tag = category == "Shelves" ? "Shelf" : "Item";
 
-        // フォルダ名（数字）を取得
-        string folderName = new DirectoryInfo(directoryPath).Name;
+        Debug.Log($"タグを付けました: {instance.name} - タグ: {instance.tag} - パス: {category}/{folderName}/{prefab.name}");
 
-        SetupImportedObject(instance, fbxPath, folderName);
+        SetupImportedObject(instance, prefab.name, folderName);
 
-        // ItemPanelのThumbnailを更新
         UpdateItemPanelThumbnail();
 
-        // ObjectInfoManagerを使用してオブジェクト情報を取得
         ObjectInfo objectInfo = ObjectInfoManager.GetObjectInfoByFolderName(folderName);
         if (objectInfo != null)
         {
@@ -101,48 +101,46 @@ public class WarehouseImporter : MonoBehaviour
         }
     }
 
-    private GameObject CreatePrefabFromFBX(string fbxPath)
+    private void ClearCategoryFolder(GameObject parent, string categoryName)
     {
-        AssetDatabase.Refresh();
-        GameObject importedObject = AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
-        if (importedObject == null)
+        Transform categoryTransform = parent.transform.Find(categoryName);
+        if (categoryTransform != null)
         {
-            return null;
+            foreach (Transform child in categoryTransform)
+            {
+                Destroy(child.gameObject);
+            }
         }
-
-        string prefabName = Path.GetFileNameWithoutExtension(fbxPath) + ".prefab";
-        string prefabPath = fbxPath.StartsWith("Assets/Files") 
-            ? "Assets/Resources/Items/" + prefabName 
-            : "Assets/Resources/Shelves/" + prefabName;
-
-        Directory.CreateDirectory(Path.GetDirectoryName(prefabPath));
-
-        GameObject prefab = PrefabUtility.SaveAsPrefabAsset(importedObject, prefabPath);
-        return prefab;
     }
 
-    private void SetupImportedObject(GameObject obj, string fbxPath, string folderName)
+    private bool IsPrefabLike(GameObject go)
+    {
+        return go.name != "thumbnail" && 
+               (go.transform.childCount > 0 || 
+                go.GetComponent<MeshRenderer>() != null || 
+                go.GetComponent<SkinnedMeshRenderer>() != null);
+    }
+
+    private void SetupImportedObject(GameObject obj, string prefabName, string folderName)
     {
         GameObject parentObject = GameObject.Find("Objects") ?? new GameObject("Objects");
 
-        GameObject folder = fbxPath.StartsWith("Assets/Shelves") 
+        GameObject folder = prefabName.StartsWith("Shelf") 
             ? GetOrCreateFolder(parentObject, "Shelves") 
             : GetOrCreateFolder(parentObject, "Items");
 
         obj.transform.SetParent(folder.transform);
-        obj.tag = fbxPath.StartsWith("Assets/Shelves") ? "Shelf" : "Item";
+        obj.tag = prefabName.StartsWith("Shelf") ? "Shelf" : "Item";
 
-        // ObjectFolderInfoコンポーネントを追加し、フォルダ名を設定
         ObjectFolderInfo folderInfo = obj.AddComponent<ObjectFolderInfo>();
         folderInfo.folderName = folderName;
 
-        obj.name = Path.GetFileNameWithoutExtension(fbxPath);
+        obj.name = prefabName;
 
-        ApplyTextureToObject(obj, fbxPath);
+        ApplyTextureToObject(obj, prefabName);
         AddPhysicsToObject(obj);
         AdjustObjectSize(obj);
 
-        // WarehouseObjectRotatorに新しいオブジェクトを通知
         if (objectRotator != null)
         {
             objectRotator.SetTargetObject(obj);
@@ -161,32 +159,26 @@ public class WarehouseImporter : MonoBehaviour
         return folderTransform.gameObject;
     }
 
-    private void ApplyTextureToObject(GameObject obj, string fbxPath)
+    private void ApplyTextureToObject(GameObject obj, string prefabName)
     {
-        Renderer renderer = obj.GetComponent<Renderer>();
-        if (renderer != null)
+        string texturePath = prefabName.StartsWith("Shelf") 
+            ? $"Shelves/{obj.name}/texture" 
+            : $"Items/{obj.name}/texture";
+
+        Texture2D texture = Resources.Load<Texture2D>(texturePath);
+        if (texture != null)
         {
-            string texturePath = Path.ChangeExtension(fbxPath, ".png");
-            Texture2D texture = LoadTexture(texturePath);
-            if (texture != null)
+            Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
+            foreach (Renderer renderer in renderers)
             {
                 renderer.material.mainTexture = texture;
             }
+            Debug.Log("Applied texture to imported object: " + obj.name);
         }
-    }
-
-    private Texture2D LoadTexture(string filePath)
-    {
-        if (File.Exists(filePath))
+        else
         {
-            byte[] fileData = File.ReadAllBytes(filePath);
-            Texture2D texture = new Texture2D(2, 2);
-            if (texture.LoadImage(fileData))
-            {
-                return texture;
-            }
+            Debug.LogWarning("Texture file not found for: " + obj.name);
         }
-        return null;
     }
 
     private void AddPhysicsToObject(GameObject obj)
@@ -215,34 +207,26 @@ public class WarehouseImporter : MonoBehaviour
             return;
         }
 
-        // オブジェクトのバウンディングボックスを取得
         Bounds bounds = CalculateBounds(obj);
 
-        // 画面心位置を計算
         Vector3 screenCenter = mainCamera.ViewportToWorldPoint(new Vector3(0.5f, 0.5f, mainCamera.nearClipPlane));
 
-        // 画面の高さの0.8倍と幅の1/3を計算（高さの制限を少し厳しくする）
         float maxHeight = mainCamera.orthographicSize * 1.6f;
         float maxWidth = mainCamera.orthographicSize * mainCamera.aspect / 3f;
 
-        // スケール係数を計算（高さと幅の制限を考慮）
         float scaleFactor = Mathf.Min(
             maxHeight / bounds.size.y,
             maxWidth / bounds.size.x,
             maxWidth / bounds.size.z
         );
 
-        // オブジェクトのスケールを調整
         Vector3 originalScale = obj.transform.localScale;
         obj.transform.localScale = originalScale * scaleFactor;
 
-        // バウンディングボックスを再計算
         bounds = CalculateBounds(obj);
 
-        // オブジェクトの位置を画面中央に設定
-        Vector3 targetPosition = screenCenter + mainCamera.transform.forward * 5f; // カメラの5単位前方
+        Vector3 targetPosition = screenCenter + mainCamera.transform.forward * 5f;
 
-        // オブジェクトの中心が画面中央に来るように位置を調整
         Vector3 offset = bounds.center - obj.transform.position;
         obj.transform.position = targetPosition - offset;
     }
@@ -267,8 +251,16 @@ public class WarehouseImporter : MonoBehaviour
     {
         if (itemPanel != null)
         {
-            string thumbnailPath = Path.ChangeExtension(selectedThumbnailPath, ".png");
-            itemPanel.UpdateThumbnail(thumbnailPath);
+            string thumbnailPath = selectedThumbnailPath.Replace("Assets/Resources/", "").Replace(".png", "");
+            Texture2D thumbnail = Resources.Load<Texture2D>(thumbnailPath);
+            if (thumbnail != null)
+            {
+                itemPanel.UpdateThumbnail(thumbnail);
+            }
+            else
+            {
+                Debug.LogWarning($"サムネイルの読み込みに失敗しました: {thumbnailPath}");
+            }
         }
     }
 

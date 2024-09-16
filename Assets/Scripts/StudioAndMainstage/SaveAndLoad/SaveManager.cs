@@ -223,7 +223,7 @@ public class SaveManager : MonoBehaviour
                 Debug.Log($"位置: {newObj.transform.position}, 回転: {newObj.transform.rotation.eulerAngles}, スケール: {newObj.transform.localScale}");
                 Debug.Log($"コンポーネント: {string.Join(", ", newObj.GetComponents<Component>().Select(c => c.GetType().Name))}");
 
-                // Colliderがな��場合は追加
+                // Colliderがな場合��追加
                 if (newObj.GetComponent<Collider>() == null)
                 {
                     newObj.AddComponent<BoxCollider>();
@@ -293,13 +293,20 @@ public class SaveManager : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void OnAfterSceneLoadRuntimeMethod()
     {
-        SaveManager saveManager = FindObjectOfType<SaveManager>();
-        if (saveManager == null)
+        // 現在のシーン名を取得
+        string currentSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+
+        // Warehouseシーンでない場合のみSaveManagerを生成
+        if (currentSceneName != "Warehouse")
         {
-            GameObject saveManagerObject = new GameObject("SaveManager");
-            saveManager = saveManagerObject.AddComponent<SaveManager>();
+            SaveManager saveManager = FindObjectOfType<SaveManager>();
+            if (saveManager == null)
+            {
+                GameObject saveManagerObject = new GameObject("SaveManager");
+                saveManager = saveManagerObject.AddComponent<SaveManager>();
+            }
+            saveManager.LoadScene();
         }
-        saveManager.LoadScene();
     }
 
     // Startメソッドを削除または無効化

@@ -30,7 +30,7 @@ public class CategoryButtonManager : MonoBehaviour
         }
 
         string folderPath = GetFolderPathForCategory(clickedButton.name);
-        importer.LoadThumbnailsFromFolder(folderPath);
+        importer.LoadThumbnailsFromResources(folderPath);
     }
 
     private string GetFolderPathForCategory(string categoryName)
@@ -38,11 +38,11 @@ public class CategoryButtonManager : MonoBehaviour
         switch (categoryName)
         {
             case "Item":
-                return "Assets/Files";
+                return "Items";
             case "Shelves":
-                return "Assets/Shelves";
+                return "Shelves";
             default:
-                return "Assets/Files";
+                return "Items";
         }
     }
 }
