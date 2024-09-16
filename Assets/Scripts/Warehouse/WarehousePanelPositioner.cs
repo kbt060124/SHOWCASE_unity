@@ -95,7 +95,7 @@ public class WarehousePanelPositioner : MonoBehaviour
 
     private void LoadInitialThumbnails()
     {
-        string[] folderPaths = { "Assets/Files", "Assets/Shelves" };
+        string[] folderPaths = { "Items", "Shelves" };
         foreach (string folderPath in folderPaths)
         {
             LoadThumbnailsFromFolder(folderPath);
@@ -104,30 +104,22 @@ public class WarehousePanelPositioner : MonoBehaviour
 
     private void LoadThumbnailsFromFolder(string folderPath)
     {
-        string[] thumbnailPaths = Directory.GetFiles(folderPath, "thumbnail.png", SearchOption.AllDirectories);
-        foreach (string thumbnailPath in thumbnailPaths)
+        Debug.Log($"フォルダからサムネイルを読み込み中: {folderPath}");
+        Object[] assets = Resources.LoadAll(folderPath);
+        Debug.Log($"読み込まれたアセット数: {assets.Length}");
+
+        foreach (Object asset in assets)
         {
-            Texture2D thumbnail = LoadTexture(thumbnailPath);
-            if (thumbnail != null)
+            if (asset is Texture2D texture)
             {
-                string fbxPath = Path.ChangeExtension(thumbnailPath, ".fbx");
-                CreateThumbnailButton(fbxPath, thumbnail);
+                string prefabPath = $"{folderPath}/{Path.GetFileNameWithoutExtension(asset.name)}";
+                Debug.Log($"サムネイル作成: {asset.name}, プレハブパス: {prefabPath}");
+                CreateThumbnailButton(prefabPath, texture);
             }
         }
     }
 
-    private Texture2D LoadTexture(string filePath)
-    {
-        byte[] fileData = File.ReadAllBytes(filePath);
-        Texture2D texture = new Texture2D(2, 2);
-        if (texture.LoadImage(fileData))
-        {
-            return texture;
-        }
-        return null;
-    }
-
-    private void CreateThumbnailButton(string thumbnailPath, Texture2D thumbnail)
+    private void CreateThumbnailButton(string prefabPath, Texture2D texture)
     {
         GameObject thumbnailObj = new GameObject("ThumbnailButton");
         thumbnailObj.transform.SetParent(thumbnailsRectTransform, false);
@@ -136,23 +128,25 @@ public class WarehousePanelPositioner : MonoBehaviour
         rectTransform.sizeDelta = new Vector2(80, 80);
 
         Image thumbnailImage = thumbnailObj.AddComponent<Image>();
-        thumbnailImage.sprite = Sprite.Create(thumbnail, new Rect(0, 0, thumbnail.width, thumbnail.height), Vector2.zero);
+        thumbnailImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+        thumbnailImage.preserveAspect = true;
 
         Button button = thumbnailObj.AddComponent<Button>();
-        button.onClick.AddListener(() => ImportScene(thumbnailPath));
+        button.onClick.AddListener(() => ImportScene(prefabPath));
 
         ColorBlock colors = button.colors;
         colors.normalColor = Color.white;
         colors.highlightedColor = Color.grey;
         button.colors = colors;
+
+        Debug.Log($"サムネイルボタンが作成されました: {prefabPath}");
     }
 
-    private void ImportScene(string thumbnailPath)
+    private void ImportScene(string prefabPath)
     {
         if (warehouseImporter != null)
         {
-            string fbxPath = Path.ChangeExtension(thumbnailPath, ".fbx");
-            warehouseImporter.ImportScene(thumbnailPath);
+            warehouseImporter.ImportScene(prefabPath);
         }
         else
         {

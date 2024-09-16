@@ -4,6 +4,7 @@ public class ObjectResizer : ObjectSelector
 {
     private bool isResizeModeActive = false;
     private float currentScaleFactor = 1f;
+    private float initialDistance;
 
     public void ToggleResizeMode()
     {

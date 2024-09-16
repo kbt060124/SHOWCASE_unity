@@ -10,14 +10,12 @@ public class ItemPanel : MonoBehaviour
     public TextMeshProUGUI categoryText;
     public TextMeshProUGUI memoText;
 
-    public void UpdateThumbnail(string thumbnailPath)
+    public void UpdateThumbnail(Texture2D thumbnail)
     {
-        if (thumbnailImage == null || string.IsNullOrEmpty(thumbnailPath)) return;
-
-        Texture2D texture = LoadTexture(thumbnailPath);
-        if (texture != null)
+        if (thumbnailImage != null && thumbnail != null)
         {
-            thumbnailImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero);
+            Sprite sprite = Sprite.Create(thumbnail, new Rect(0, 0, thumbnail.width, thumbnail.height), new Vector2(0.5f, 0.5f));
+            thumbnailImage.sprite = sprite;
         }
     }
 
