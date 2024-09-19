@@ -1,7 +1,7 @@
 using UnityEngine;
-using System.Collections.Generic; // この行を追加
+using System.Collections.Generic;
 using UnityFx.Outline;
-using UnityEngine.EventSystems; // この行を追加
+using UnityEngine.EventSystems;
 
 public class ObjectSelector : MonoBehaviour
 {
@@ -58,15 +58,15 @@ public class ObjectSelector : MonoBehaviour
 
     protected virtual bool SelectObject()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began || Input.GetMouseButtonDown(0))
         {
             // UIの要素がクリックされた場合は、オブジェクト選択を行わない
-            if (EventSystem.current.IsPointerOverGameObject())
+            if (IsPointerOverUIObject())
             {
                 return false;
             }
 
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Ray ray = Camera.main.ScreenPointToRay(Input.touchCount > 0 ? Input.GetTouch(0).position : (Vector3)Input.mousePosition);
             RaycastHit hit;
 
             if (Physics.Raycast(ray, out hit))
@@ -117,6 +117,27 @@ public class ObjectSelector : MonoBehaviour
             }
         }
         return false;
+    }
+
+    private bool IsPointerOverUIObject()
+    {
+        PointerEventData eventDataCurrentPosition = new PointerEventData(EventSystem.current);
+        eventDataCurrentPosition.position = Input.touchCount > 0 ? Input.GetTouch(0).position : (Vector2)Input.mousePosition;
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
+        
+        foreach (RaycastResult result in results)
+        {
+            if (result.gameObject.GetComponent<FixedJoystick>() != null)
+            {
+                DeselectObject();
+                return true;
+            }
+        }
+        
+        return Input.touchCount > 0 ? 
+            EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId) : 
+            EventSystem.current.IsPointerOverGameObject();
     }
 
     private void DeselectObject()
