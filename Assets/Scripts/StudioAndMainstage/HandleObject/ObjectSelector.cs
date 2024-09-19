@@ -58,15 +58,15 @@ public class ObjectSelector : MonoBehaviour
 
     protected virtual bool SelectObject()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began || Input.GetMouseButtonDown(0))
         {
             // UIの要素がクリックされた場合は、オブジェクト選択を行わない
-            if (EventSystem.current.IsPointerOverGameObject())
+            if (IsPointerOverUIObject())
             {
                 return false;
             }
 
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Ray ray = Camera.main.ScreenPointToRay(Input.touchCount > 0 ? Input.GetTouch(0).position : (Vector3)Input.mousePosition);
             RaycastHit hit;
 
             if (Physics.Raycast(ray, out hit))
@@ -117,6 +117,18 @@ public class ObjectSelector : MonoBehaviour
             }
         }
         return false;
+    }
+
+    private bool IsPointerOverUIObject()
+    {
+        if (Input.touchCount > 0)
+        {
+            return EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+        }
+        else
+        {
+            return EventSystem.current.IsPointerOverGameObject();
+        }
     }
 
     private void DeselectObject()
