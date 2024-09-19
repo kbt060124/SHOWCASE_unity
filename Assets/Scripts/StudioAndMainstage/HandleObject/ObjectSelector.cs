@@ -1,7 +1,7 @@
 using UnityEngine;
-using System.Collections.Generic; // この行を追加
+using System.Collections.Generic;
 using UnityFx.Outline;
-using UnityEngine.EventSystems; // この行を追加
+using UnityEngine.EventSystems;
 
 public class ObjectSelector : MonoBehaviour
 {
@@ -121,14 +121,23 @@ public class ObjectSelector : MonoBehaviour
 
     private bool IsPointerOverUIObject()
     {
-        if (Input.touchCount > 0)
+        PointerEventData eventDataCurrentPosition = new PointerEventData(EventSystem.current);
+        eventDataCurrentPosition.position = Input.touchCount > 0 ? Input.GetTouch(0).position : (Vector2)Input.mousePosition;
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
+        
+        foreach (RaycastResult result in results)
         {
-            return EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+            if (result.gameObject.GetComponent<FixedJoystick>() != null)
+            {
+                DeselectObject();
+                return true;
+            }
         }
-        else
-        {
-            return EventSystem.current.IsPointerOverGameObject();
-        }
+        
+        return Input.touchCount > 0 ? 
+            EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId) : 
+            EventSystem.current.IsPointerOverGameObject();
     }
 
     private void DeselectObject()
