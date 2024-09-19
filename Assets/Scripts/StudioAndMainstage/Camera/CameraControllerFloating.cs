@@ -141,32 +141,34 @@ public class CameraControllerFloating : MonoBehaviour
 
     void CameraZoom()
     {
-        if (Input.touchCount == 2)
-        {
-            // get current touch positions
-            // Touch tZero = Input.GetTouch(0);
-            // Touch tOne = Input.GetTouch(1);
-            Touch tZero = Input.GetTouch(0);
-            Touch tOne = Input.GetTouch(1);
-            // get touch position from the previous frame
-            Vector2 tZeroPrevious = tZero.position - tZero.deltaPosition;
-            Vector2 tOnePrevious = tOne.position - tOne.deltaPosition;
+        return;
+        
+        // if (Input.touchCount == 2)
+        // {
+        //     // get current touch positions
+        //     // Touch tZero = Input.GetTouch(0);
+        //     // Touch tOne = Input.GetTouch(1);
+        //     Touch tZero = Input.GetTouch(0);
+        //     Touch tOne = Input.GetTouch(1);
+        //     // get touch position from the previous frame
+        //     Vector2 tZeroPrevious = tZero.position - tZero.deltaPosition;
+        //     Vector2 tOnePrevious = tOne.position - tOne.deltaPosition;
 
-            float oldTouchDistance = Vector2.Distance(tZeroPrevious, tOnePrevious);
-            float currentTouchDistance = Vector2.Distance(tZero.position, tOne.position);
+        //     float oldTouchDistance = Vector2.Distance(tZeroPrevious, tOnePrevious);
+        //     float currentTouchDistance = Vector2.Distance(tZero.position, tOne.position);
 
-            // get offset value
-            float deltaDistance = oldTouchDistance - currentTouchDistance;
-            Zoom(deltaDistance, TouchZoomSpeed);
-        }
-        else if (Input.GetKeyDown("g")) // 'g' キーを押すとズームイン
-        {
-            Zoom(-1f, TouchZoomSpeed); // 負の値でズームイン
-        }
-        else if (Input.GetKeyDown("h")) // 'h' キーを押すとズームアウト
-        {
-            Zoom(1f, TouchZoomSpeed); // 正の値でズームアウト
-        }
+        //     // get offset value
+        //     float deltaDistance = oldTouchDistance - currentTouchDistance;
+        //     Zoom(deltaDistance, TouchZoomSpeed);
+        // }
+        // else if (Input.GetKeyDown("g")) // 'g' キーを押すとズームイン
+        // {
+        //     Zoom(-1f, TouchZoomSpeed); // 負の値でズームイン
+        // }
+        // else if (Input.GetKeyDown("h")) // 'h' キーを押すとズームアウト
+        // {
+        //     Zoom(1f, TouchZoomSpeed); // 正の値でズームアウト
+        // }
     }
 
     void Zoom(float deltaMagnitudeDiff, float speed)
