@@ -79,5 +79,5 @@ sysinfo.txt
 crashlytics-build.properties
 
 # Project Settings
-ProjectSettings/
 UserSettings/
+Project Settings.asset
