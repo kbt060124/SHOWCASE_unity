@@ -185,7 +185,7 @@ PlayerSettings:
   StripUnusedMeshComponents: 1
   strictShaderVariantMatching: 0
   VertexChannelCompressionMask: 4054
-  iPhoneSdkVersion: 988
+  iPhoneSdkVersion: 989
   iOSTargetOSVersionString: 12.0
   tvOSSdkVersion: 0
   tvOSRequireExtendedGameController: 0
@@ -853,11 +853,11 @@ PlayerSettings:
   apiCompatibilityLevel: 6
   activeInputHandler: 0
   windowsGamepadBackendHint: 0
-  cloudProjectId: be4cc24b-76b7-471d-b978-ac8c9da596e8
+  cloudProjectId: 0535756e-5e0e-4fa5-9a5a-6e4c9f62007b
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
   projectName: FBXImport
-  organizationId: kaho_t
+  organizationId: kbt060124
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}
