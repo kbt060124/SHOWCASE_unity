@@ -74,12 +74,12 @@ public class AxisDragAndDropHandler : ObjectSelector
             mouseOffset = selectedObject.transform.position - GetMouseWorldPosition();
         }
 
-        if (selectedObject != null && Input.GetMouseButton(0))
+        if (selectedObject != null && (Input.GetMouseButton(0) || Input.touchCount > 0))
         {
-            // UIの上でクリックされていないか確認
-            if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            // UIの上でクリックまたはタッチされていないか確認
+            if (IsPointerOverUIObject())
             {
-                return; // UI要素上でクリックされた場合は処理をスキップ
+                return; // UI要素上でクリックまたはタッチされた場合は処理をスキップ
             }
 
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -210,5 +210,19 @@ public class AxisDragAndDropHandler : ObjectSelector
             return ray.GetPoint(distance);
         }
         return Vector3.zero;
+    }
+
+    // 新しいメソッドを追加
+    private bool IsPointerOverUIObject()
+    {
+        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+        {
+            return EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+        }
+        else if (Input.GetMouseButtonDown(0))
+        {
+            return EventSystem.current.IsPointerOverGameObject();
+        }
+        return false;
     }
 }
