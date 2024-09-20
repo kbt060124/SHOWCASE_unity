@@ -11,7 +11,7 @@ public class AxisDragAndDropHandler : ObjectSelector
     private GameObject wallRight;
     private GameObject wallLeft;
     private GameObject wallBack;
-    private GameObject wallFront;
+    private GameObject wallFront; // 新しい壁を追加
     private GameObject ceiling;
     private GameObject floor;
     private CanvasManager canvasManager;
@@ -22,13 +22,13 @@ public class AxisDragAndDropHandler : ObjectSelector
         wallRight = GameObject.FindGameObjectWithTag("WallRight");
         wallLeft = GameObject.FindGameObjectWithTag("WallLeft");
         wallBack = GameObject.FindGameObjectWithTag("WallBack");
-        wallFront = GameObject.FindGameObjectWithTag("WallFront");
+        wallFront = GameObject.FindGameObjectWithTag("WallFront"); // 新しい壁を検索
         ceiling = GameObject.FindGameObjectWithTag("Ceiling");
         floor = GameObject.FindGameObjectWithTag("Floor");
 
         // 初期状態をXZ軸モードに設定
-        OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.AxisDragAndDropXZ);
-        Debug.Log("初期状態：XZ軸モードに設定しました");
+        OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.AxisDragAndDrop);
+        Debug.Log("初期状態：XZ軸モードをオンにしました");
 
         // CanvasManagerの参照を取得
         canvasManager = FindObjectOfType<CanvasManager>();
@@ -45,77 +45,69 @@ public class AxisDragAndDropHandler : ObjectSelector
 
         OperationModeManager.OperationMode currentMode = OperationModeManager.Instance.GetCurrentMode();
 
-        if (currentMode == OperationModeManager.OperationMode.AxisDragAndDropXY)
+        if (currentMode != OperationModeManager.OperationMode.AxisDragAndDrop)
         {
-            OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.AxisDragAndDropXZ);
-            Debug.Log("XZ軸モードに切り替えました");
+            OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.AxisDragAndDrop);
+            isXZMode = true;
+            Debug.Log("XZ軸モードをオンにしました");
         }
         else
         {
-            OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.AxisDragAndDropXY);
-            Debug.Log("XY軸モードに切り替えました");
+            isXZMode = !isXZMode;
+            Debug.Log(isXZMode ? "XZ軸モードに切り替えました" : "XY軸モードに切り替えました");
         }
     }
 
     void Update()
     {
+        // Mainstageがアクティブな場合は何もしない
         if (canvasManager != null && canvasManager.isMainstageActive) return;
 
-        if (!OperationModeManager.Instance.CanMove()) return;
+        if (OperationModeManager.Instance.GetCurrentMode() != OperationModeManager.OperationMode.AxisDragAndDrop) return;
 
-        if (SelectObject())
+        if (Input.GetMouseButtonDown(0))
         {
-            screenPoint = Camera.main.WorldToScreenPoint(selectedObject.transform.position);
-            initialPosition = selectedObject.transform.position;
-            initialY = selectedObject.transform.position.y;
+            SelectObject();
         }
 
         if (selectedObject != null && Input.GetMouseButton(0))
         {
-<<<<<<< HEAD
             // UIの上でクリックされていないか確認
             if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
             {
                 return; // UI要素上でクリックされた場合は処理をスキップ
             }
 
-            Vector3 mousePosition = Input.mousePosition;
-            Ray ray = Camera.main.ScreenPointToRay(mousePosition);
-=======
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
->>>>>>> develop
 
-            if (OperationModeManager.Instance.CanMove())
+            if (isXZMode)
             {
-                if (OperationModeManager.Instance.IsXYMode())
+                // XZ平面での移動（既存のコード）
+                if (xzPlane.Raycast(ray, out float distance))
                 {
-                    // XY平面での移動（Y座標のみ操作可能）
-                    Plane xyPlane = new Plane(Camera.main.transform.forward, selectedObject.transform.position);
-                    if (xyPlane.Raycast(ray, out float distance))
+                    Vector3 hitPoint = ray.GetPoint(distance);
+                    Vector3 newPosition = new Vector3(hitPoint.x, selectedObject.transform.position.y, hitPoint.z);
+                    if (!IsColliding(newPosition))
                     {
-                        Vector3 hitPoint = ray.GetPoint(distance);
-                        Vector3 newPosition = new Vector3(
-                            selectedObject.transform.position.x,
-                            hitPoint.y,
-                            selectedObject.transform.position.z
-                        );
-                        if (!IsColliding(newPosition))
-                        {
-                            selectedObject.transform.position = newPosition;
-                        }
+                        selectedObject.transform.position = newPosition;
                     }
                 }
-                else
+            }
+            else
+            {
+                // XY平面での移動（Y座標のみ操作）
+                Plane xyPlane = new Plane(Camera.main.transform.forward, selectedObject.transform.position);
+                if (xyPlane.Raycast(ray, out float distance))
                 {
-                    // XZ平面での移動（Y座標固定）
-                    if (xzPlane.Raycast(ray, out float distance))
+                    Vector3 hitPoint = ray.GetPoint(distance);
+                    Vector3 newPosition = new Vector3(
+                        selectedObject.transform.position.x,
+                        hitPoint.y,
+                        selectedObject.transform.position.z
+                    );
+                    if (!IsColliding(newPosition))
                     {
-                        Vector3 hitPoint = ray.GetPoint(distance);
-                        Vector3 newPosition = new Vector3(hitPoint.x, selectedObject.transform.position.y, hitPoint.z);
-                        if (!IsColliding(newPosition))
-                        {
-                            selectedObject.transform.position = newPosition;
-                        }
+                        selectedObject.transform.position = newPosition;
                     }
                 }
             }
@@ -153,6 +145,7 @@ public class AxisDragAndDropHandler : ObjectSelector
     {
         // Mainstageがアクティブな場合は衝突していないとみなす
         if (canvasManager != null && canvasManager.isMainstageActive) return false;
+
         if (selectedObject == null) return false;
 
         Bounds objectBounds = GetObjectBounds(selectedObject, newPosition);
