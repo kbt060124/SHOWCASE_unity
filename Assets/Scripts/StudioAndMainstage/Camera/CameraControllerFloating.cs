@@ -136,7 +136,7 @@ public class CameraControllerFloating : MonoBehaviour
         transform.position = newPosition;
 
         //右スティックでの回転（水平および垂直）
-        transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + new Vector3(-rotateSpeed * inputRotate.Vertical * 0.1f, rotateSpeed * inputRotate.Horizontal * 0.1f, 0));
+        transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + new Vector3(-rotateSpeed * inputRotate.Vertical * 1f, rotateSpeed * inputRotate.Horizontal * 1f, 0));
     }
 
     void CameraZoom()
