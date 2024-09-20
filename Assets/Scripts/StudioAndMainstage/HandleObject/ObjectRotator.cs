@@ -2,27 +2,17 @@ using UnityEngine;
 
 public class ObjectRotator : ObjectSelector
 {
-    private bool isRotationModeActive = false;
     private Vector3 lastMousePosition;
 
-    // 回転モードを有効/無効にするメソッド
     public void ToggleRotationMode()
     {
-        isRotationModeActive = !isRotationModeActive;
-        if (isRotationModeActive)
-        {
-            OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.Rotate);
-        }
-        else
-        {
-            OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.None);
-        }
-        Debug.Log("回転モード: " + (isRotationModeActive ? "オン" : "オフ"));
+        OperationModeManager.Instance.ToggleMode(OperationModeManager.OperationMode.Rotate);
+        Debug.Log("回転モード: " + (OperationModeManager.Instance.IsCurrentMode(OperationModeManager.OperationMode.Rotate) ? "オン" : "オフ"));
     }
 
     void Update()
     {
-        if (!isRotationModeActive || !OperationModeManager.Instance.IsCurrentMode(OperationModeManager.OperationMode.Rotate)) return;
+        if (!OperationModeManager.Instance.IsCurrentMode(OperationModeManager.OperationMode.Rotate)) return;
 
         if (SelectObject())
         {
