@@ -15,7 +15,6 @@ public class AxisDragAndDropHandler : ObjectSelector
     private GameObject ceiling;
     private GameObject floor;
     private CanvasManager canvasManager;
-    private Vector3 mouseOffset;
 
     void Start()
     {
@@ -60,21 +59,17 @@ public class AxisDragAndDropHandler : ObjectSelector
 
     void Update()
     {
+        // Mainstageがアクティブな場合は何もしない
         if (canvasManager != null && canvasManager.isMainstageActive) return;
 
         if (!OperationModeManager.Instance.CanMove()) return;
 
-        if (SelectObject())
+        if (Input.GetMouseButtonDown(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began))
         {
-            screenPoint = Camera.main.WorldToScreenPoint(selectedObject.transform.position);
-            initialPosition = selectedObject.transform.position;
-            initialY = selectedObject.transform.position.y;
-
-            // マウスとオブジェクトの相対位置を計算
-            mouseOffset = selectedObject.transform.position - GetMouseWorldPosition();
+            SelectObject();
         }
 
-        if (selectedObject != null && (Input.GetMouseButton(0) || Input.touchCount > 0))
+        if (selectedObject != null && (Input.GetMouseButton(0) || (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Moved)))
         {
             // UIの上でクリックまたはタッチされていないか確認
             if (IsPointerOverUIObject())
@@ -107,11 +102,14 @@ public class AxisDragAndDropHandler : ObjectSelector
                 else
                 {
                     // XZ平面での移動（Y座標固定）
-                    Vector3 mouseWorldPos = GetMouseWorldPosition();
-                    Vector3 newPosition = new Vector3(mouseWorldPos.x + mouseOffset.x, selectedObject.transform.position.y, mouseWorldPos.z + mouseOffset.z);
-                    if (!IsColliding(newPosition))
+                    if (xzPlane.Raycast(ray, out float distance))
                     {
-                        selectedObject.transform.position = newPosition;
+                        Vector3 hitPoint = ray.GetPoint(distance);
+                        Vector3 newPosition = new Vector3(hitPoint.x, selectedObject.transform.position.y, hitPoint.z);
+                        if (!IsColliding(newPosition))
+                        {
+                            selectedObject.transform.position = newPosition;
+                        }
                     }
                 }
             }
@@ -202,27 +200,15 @@ public class AxisDragAndDropHandler : ObjectSelector
         return bounds;
     }
 
-    private Vector3 GetMouseWorldPosition()
-    {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (xzPlane.Raycast(ray, out float distance))
-        {
-            return ray.GetPoint(distance);
-        }
-        return Vector3.zero;
-    }
-
-    // 新しいメソッドを追加
     private bool IsPointerOverUIObject()
     {
-        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+        if (Input.touchCount > 0)
         {
-            return EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+            return UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
         }
-        else if (Input.GetMouseButtonDown(0))
+        else
         {
-            return EventSystem.current.IsPointerOverGameObject();
+            return UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
         }
-        return false;
     }
 }
