@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class AxisDragAndDropHandler : ObjectSelector
 {
@@ -71,6 +72,12 @@ public class AxisDragAndDropHandler : ObjectSelector
 
         if (selectedObject != null && Input.GetMouseButton(0))
         {
+            // UIの上でクリックされていないか確認
+            if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            {
+                return; // UI要素上でクリックされた場合は処理をスキップ
+            }
+
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
             if (OperationModeManager.Instance.CanMove())
@@ -194,4 +201,3 @@ public class AxisDragAndDropHandler : ObjectSelector
         return bounds;
     }
 }
-
