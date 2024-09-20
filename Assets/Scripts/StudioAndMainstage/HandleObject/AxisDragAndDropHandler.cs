@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class AxisDragAndDropHandler : ObjectSelector
 {
@@ -71,6 +72,12 @@ public class AxisDragAndDropHandler : ObjectSelector
 
         if (selectedObject != null && Input.GetMouseButton(0))
         {
+            // UIの上でクリックされていないか確認
+            if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            {
+                return; // UI要素上でクリックされた場合は処理をスキップ
+            }
+
             Vector3 mousePosition = Input.mousePosition;
             Ray ray = Camera.main.ScreenPointToRay(mousePosition);
 
