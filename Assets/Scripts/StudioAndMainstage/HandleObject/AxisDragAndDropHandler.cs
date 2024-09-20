@@ -15,6 +15,7 @@ public class AxisDragAndDropHandler : ObjectSelector
     private GameObject ceiling;
     private GameObject floor;
     private CanvasManager canvasManager;
+    private Vector3 mouseOffset;
 
     void Start()
     {
@@ -68,6 +69,9 @@ public class AxisDragAndDropHandler : ObjectSelector
             screenPoint = Camera.main.WorldToScreenPoint(selectedObject.transform.position);
             initialPosition = selectedObject.transform.position;
             initialY = selectedObject.transform.position.y;
+
+            // マウスとオブジェクトの相対位置を計算
+            mouseOffset = selectedObject.transform.position - GetMouseWorldPosition();
         }
 
         if (selectedObject != null && Input.GetMouseButton(0))
@@ -103,14 +107,11 @@ public class AxisDragAndDropHandler : ObjectSelector
                 else
                 {
                     // XZ平面での移動（Y座標固定）
-                    if (xzPlane.Raycast(ray, out float distance))
+                    Vector3 mouseWorldPos = GetMouseWorldPosition();
+                    Vector3 newPosition = new Vector3(mouseWorldPos.x + mouseOffset.x, selectedObject.transform.position.y, mouseWorldPos.z + mouseOffset.z);
+                    if (!IsColliding(newPosition))
                     {
-                        Vector3 hitPoint = ray.GetPoint(distance);
-                        Vector3 newPosition = new Vector3(hitPoint.x, selectedObject.transform.position.y, hitPoint.z);
-                        if (!IsColliding(newPosition))
-                        {
-                            selectedObject.transform.position = newPosition;
-                        }
+                        selectedObject.transform.position = newPosition;
                     }
                 }
             }
@@ -199,5 +200,15 @@ public class AxisDragAndDropHandler : ObjectSelector
         bounds.center += offset;
 
         return bounds;
+    }
+
+    private Vector3 GetMouseWorldPosition()
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        if (xzPlane.Raycast(ray, out float distance))
+        {
+            return ray.GetPoint(distance);
+        }
+        return Vector3.zero;
     }
 }
