@@ -2,27 +2,18 @@ using UnityEngine;
 
 public class ObjectResizer : ObjectSelector
 {
-    private bool isResizeModeActive = false;
     private float currentScaleFactor = 1f;
     private float initialDistance;
 
     public void ToggleResizeMode()
     {
-        isResizeModeActive = !isResizeModeActive;
-        if (isResizeModeActive)
-        {
-            OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.Resize);
-        }
-        else
-        {
-            OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.None);
-        }
-        Debug.Log("リサイズモード: " + (isResizeModeActive ? "オン" : "オフ"));
+        OperationModeManager.Instance.ToggleMode(OperationModeManager.OperationMode.Resize);
+        Debug.Log("リサイズモード: " + (OperationModeManager.Instance.IsCurrentMode(OperationModeManager.OperationMode.Resize) ? "オン" : "オフ"));
     }
 
     void Update()
     {
-        if (!isResizeModeActive || !OperationModeManager.Instance.IsCurrentMode(OperationModeManager.OperationMode.Resize)) return;
+        if (!OperationModeManager.Instance.IsCurrentMode(OperationModeManager.OperationMode.Resize)) return;
 
         if (SelectObject())
         {

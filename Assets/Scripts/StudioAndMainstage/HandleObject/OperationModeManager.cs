@@ -22,23 +22,30 @@ public class OperationModeManager : MonoBehaviour
         None,
         Resize,
         Rotate,
-        AxisDragAndDrop
+        AxisDragAndDropXY,
+        AxisDragAndDropXZ
     }
 
-    private OperationMode currentMode = OperationMode.None;
+    private OperationMode currentMode = OperationMode.AxisDragAndDropXZ;
+    private bool canMove = true;
 
-    public void SetMode(OperationMode mode)
+    public void ToggleMode(OperationMode mode)
     {
-        if (currentMode != mode)
+        if (currentMode == mode)
         {
-            currentMode = mode;
-            Debug.Log("現在のモード: " + currentMode);
+            SetMode(OperationMode.AxisDragAndDropXZ);
+        }
+        else
+        {
+            SetMode(mode);
         }
     }
 
-    public void SetModeToNone()
+    public void SetMode(OperationMode mode)
     {
-        SetMode(OperationMode.None);
+        currentMode = mode;
+        canMove = (mode == OperationMode.AxisDragAndDropXY || mode == OperationMode.AxisDragAndDropXZ || mode == OperationMode.None);
+        Debug.Log("現在のモード: " + currentMode + ", 移動可能: " + (canMove ? "はい" : "いいえ"));
     }
 
     public bool IsCurrentMode(OperationMode mode)
@@ -49,5 +56,20 @@ public class OperationModeManager : MonoBehaviour
     public OperationMode GetCurrentMode()
     {
         return currentMode;
+    }
+
+    public bool CanMove()
+    {
+        return canMove;
+    }
+
+    public bool IsXYMode()
+    {
+        return currentMode == OperationMode.AxisDragAndDropXY;
+    }
+
+    public bool IsAnyNonMoveOperationActive()
+    {
+        return currentMode == OperationMode.Resize || currentMode == OperationMode.Rotate;
     }
 }
