@@ -142,7 +142,7 @@ public class CameraControllerFixed : MonoBehaviour
     void CameraZoom()
     {
         return;
-        
+
         // if (Input.touchCount == 2)
         // {
         //     // get current touch positions
