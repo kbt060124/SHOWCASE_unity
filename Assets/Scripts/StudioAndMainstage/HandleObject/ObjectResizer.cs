@@ -4,11 +4,23 @@ public class ObjectResizer : ObjectSelector
 {
     private float currentScaleFactor = 1f;
     private float initialDistance;
+    private ButtonController buttonController;
+
+    private void Start()
+    {
+        buttonController = FindObjectOfType<ButtonController>();
+    }
 
     public void ToggleResizeMode()
     {
         OperationModeManager.Instance.ToggleMode(OperationModeManager.OperationMode.Resize);
-        Debug.Log("リサイズモード: " + (OperationModeManager.Instance.IsCurrentMode(OperationModeManager.OperationMode.Resize) ? "オン" : "オフ"));
+        UpdateButtonState();
+    }
+
+    private void UpdateButtonState()
+    {
+        bool isResizeMode = OperationModeManager.Instance.IsCurrentMode(OperationModeManager.OperationMode.Resize);
+        buttonController.UpdateButtonState(buttonController.resizeButton, buttonController.resizeNormalSprite, buttonController.resizeSelectedSprite, isResizeMode);
     }
 
     void Update()
