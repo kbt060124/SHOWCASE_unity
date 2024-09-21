@@ -22,7 +22,7 @@ public class PhysicsAssigner : MonoBehaviour
             }
         }
 
-        Debug.Log($"物理判定が追加されたオブジェクト数: {addedPhysicsCount}");
+        // Debug.Log($"物理判定が追加されたオブジェクト数: {addedPhysicsCount}");
     }
 
     private bool AddPhysicsToObject(GameObject obj)
@@ -37,13 +37,13 @@ public class PhysicsAssigner : MonoBehaviour
             rb.mass = 1f;
             rb.drag = 10f;
             rb.angularDrag = 10f;
-            Debug.Log($"{obj.name}にRigidbodyを追加しました。");
+            // Debug.Log($"{obj.name}にRigidbodyを追加しました。");
             physicsAdded = true;
         }
         if (obj.GetComponent<Collider>() == null)
         {
             obj.AddComponent<BoxCollider>();
-            Debug.Log($"{obj.name}にBoxColliderを追加しました。");
+            // Debug.Log($"{obj.name}にBoxColliderを追加しました。");
             physicsAdded = true;
         }
 

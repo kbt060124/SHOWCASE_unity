@@ -40,17 +40,17 @@ public class Importer : MonoBehaviour
                 Vector3.Distance(ceiling.transform.position, floor.transform.position),
                 Vector3.Distance(wallBack.transform.position, wallFront.transform.position)
             );
-            Debug.Log($"計算されたroomCenter: {roomCenter}");
-            Debug.Log($"計算されたroomSize: {roomSize}");
+            // Debug.Log($"計算されたroomCenter: {roomCenter}");
+            // Debug.Log($"計算されたroomSize: {roomSize}");
         }
         else
         {
             Debug.LogWarning("部屋のオブジェクトが見つかりません。デフォルト値を使用します。");
             roomCenter = Vector3.zero;
             roomSize = new Vector3(10f, 5f, 10f);
-            Debug.Log($"デフォルトのroomSize: {roomSize}");
+            // Debug.Log($"デフォルトのroomSize: {roomSize}");
         }
-        Debug.Log($"最終的なroomSize: x={roomSize.x}, y={roomSize.y}, z={roomSize.z}");
+        // Debug.Log($"最終的なroomSize: x={roomSize.x}, y={roomSize.y}, z={roomSize.z}");
     }
 
     public void LoadThumbnailsFromResources(string folderPath)
@@ -156,11 +156,11 @@ public class Importer : MonoBehaviour
             instance.transform.SetParent(parentObject.transform);
         }
 
-        Debug.Log($"タグを付けました: {instance.name} - タグ: {instance.tag} - パス: {prefabPath}");
+        // Debug.Log($"タグを付けました: {instance.name} - タグ: {instance.tag} - パス: {prefabPath}");
 
         PositionObjectInFrontOfCamera(instance);
 
-        Debug.Log($"Successfully added imported object to the scene: {instance.name}");
+        // Debug.Log($"Successfully added imported object to the scene: {instance.name}");
 
         PhysicsAssigner physicsAssigner = parentObject.GetComponent<PhysicsAssigner>();
         if (physicsAssigner == null)
@@ -209,7 +209,7 @@ public class Importer : MonoBehaviour
         float yOffset = bounds.extents.y;
         obj.transform.position = new Vector3(roomCenter.x, roomCenter.y - roomSize.y / 2 + yOffset, roomCenter.z);
 
-        Debug.Log($"オブジェクト '{obj.name}' の最終位置: {obj.transform.position}, スケール: {obj.transform.localScale}, 元のスケール: {originalScale}, 適用されたスケール係数: {scaleFactor}, タグ: {obj.tag}");
+        // Debug.Log($"オブジェクト '{obj.name}' の最終位置: {obj.transform.position}, スケール: {obj.transform.localScale}, 元のスケール: {originalScale}, 適用されたスケール係数: {scaleFactor}, タグ: {obj.tag}");
     }
 
     private Bounds CalculateBounds(GameObject obj)
