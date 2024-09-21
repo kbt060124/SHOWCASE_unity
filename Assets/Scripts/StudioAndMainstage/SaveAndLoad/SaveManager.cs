@@ -223,7 +223,7 @@ public class SaveManager : MonoBehaviour
                 // Debug.Log($"位置: {newObj.transform.position}, 回転: {newObj.transform.rotation.eulerAngles}, スケール: {newObj.transform.localScale}");
                 // Debug.Log($"コンポーネント: {string.Join(", ", newObj.GetComponents<Component>().Select(c => c.GetType().Name))}");
 
-                // Colliderがな場合��追加
+                // Colliderがな場合追加
                 if (newObj.GetComponent<Collider>() == null)
                 {
                     newObj.AddComponent<BoxCollider>();
@@ -279,10 +279,8 @@ public class SaveManager : MonoBehaviour
         if (physicsAssigner == null)
         {
             physicsAssigner = gameObject.AddComponent<PhysicsAssigner>();
-        //     Debug.Log("PhysicsAssignerコンポーネントが追加されました。");
-        // }
+        }
         physicsAssigner.AddPhysicsToChildren();
-        // Debug.Log("読み込まれたオブジェクトに物理判定の追加を試みました。");
     }
 
     private void Awake()
