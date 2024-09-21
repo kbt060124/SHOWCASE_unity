@@ -1678,6 +1678,12 @@ MonoBehaviour:
   axisButton: {fileID: 489694575}
   saveButton: {fileID: 943491337}
   deleteButton: {fileID: 321379667}
+  resizeNormalSprite: {fileID: 21300000, guid: 09dda659d278c4022b9aca1054c6fe90, type: 3}
+  resizeSelectedSprite: {fileID: 21300000, guid: ddb77ec52f7b24ef09f3fa9af334d419, type: 3}
+  rotateNormalSprite: {fileID: 21300000, guid: 2770e8e1ff53144858916502a7a72ed7, type: 3}
+  rotateSelectedSprite: {fileID: 21300000, guid: c02b6b715b5864ddf993cd95d0abd401, type: 3}
+  axisNormalSprite: {fileID: 21300000, guid: 7e54cca1ed0ad427487f096ff155cdd5, type: 3}
+  axisSelectedSprite: {fileID: 21300000, guid: 4da5f3a5e1291411a8f08327af87fff6, type: 3}
 --- !u!1 &599231656
 GameObject:
   m_ObjectHideFlags: 0
