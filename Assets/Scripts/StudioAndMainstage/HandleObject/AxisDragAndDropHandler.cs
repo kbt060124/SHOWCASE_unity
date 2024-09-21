@@ -3,7 +3,7 @@ using UnityEngine.EventSystems;
 
 public class AxisDragAndDropHandler : ObjectSelector
 {
-    private const float Y_MOVEMENT_THRESHOLD = 1f;
+    private const float Y_MOVEMENT_THRESHOLD = 0.8f;
 
     private Plane xzPlane;
     private Vector3 initialPosition;
@@ -150,7 +150,10 @@ public class AxisDragAndDropHandler : ObjectSelector
 
     private Vector3 CalculateXZPosition(Ray ray)
     {
-        if (xzPlane.Raycast(ray, out float distance))
+        // オブジェクトの現在のY座標を使用してxzPlaneを作成
+        Plane objectXZPlane = new Plane(Vector3.up, new Vector3(0, selectedObject.transform.position.y, 0));
+
+        if (objectXZPlane.Raycast(ray, out float distance))
         {
             Vector3 hitPoint = ray.GetPoint(distance);
             return new Vector3(hitPoint.x, selectedObject.transform.position.y, hitPoint.z);
