@@ -78,32 +78,39 @@ public class SaveManager : MonoBehaviour
 
     public void SaveScene()
     {
-        SceneData sceneData = new SceneData();
-        GameObject objectsContainer = GameObject.Find("Objects");
-
-        if (objectsContainer != null)
+        try
         {
-            // Debug.Log($"'Objects'コンテナが見つかりました。子オブジェクト数: {objectsContainer.transform.childCount}");
+            SceneData sceneData = new SceneData();
+            GameObject objectsContainer = GameObject.Find("Objects");
 
-            foreach (Transform child in objectsContainer.transform)
+            if (objectsContainer != null)
             {
-                SaveObjectRecursively(child.gameObject, sceneData);
+                foreach (Transform child in objectsContainer.transform)
+                {
+                    SaveObjectRecursively(child.gameObject, sceneData);
+                }
             }
+            else
+            {
+                Debug.LogWarning("'Objects'コンテナが見つかりません。");
+            }
+
+            string json = JsonUtility.ToJson(sceneData);
+            string savePath = Path.Combine(Application.persistentDataPath, SAVE_FILE_NAME);
+            File.WriteAllText(savePath, json);
+
+            Debug.Log("シーンが保存されました");
+            Debug.Log($"保存されたJSONデータ: {json}");
+            Debug.Log($"保存先: {savePath}");
+
+            // 保存が成功した場合にのみポップアップを表示
+            ShowSaveCompletedPopup();
         }
-        else
+        catch (System.Exception e)
         {
-            Debug.LogWarning("'Objects'コンテナが見つかりません。");
+            Debug.LogError($"シーンの保存中にエラーが発生しました: {e.Message}");
+            // エラーが発生した場合、ここでエラーメッセージを表示するなどの処理を追加できます
         }
-
-        string json = JsonUtility.ToJson(sceneData);
-        string savePath = Path.Combine(Application.persistentDataPath, SAVE_FILE_NAME);
-        File.WriteAllText(savePath, json);
-
-        Debug.Log("シーンが保存されました");
-        Debug.Log($"保存されたJSONデータ: {json}");
-        Debug.Log($"保存先: {savePath}");
-
-        ShowSaveCompletedPopup();
     }
 
     private void SaveObjectRecursively(GameObject obj, SceneData sceneData, int parentIndex = -1)
