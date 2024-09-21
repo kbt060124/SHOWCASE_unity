@@ -98,7 +98,7 @@ public class CameraControllerFixed : MonoBehaviour
             wallBackBounds.min.z - wallBackThickness
         );
 
-        Debug.Log($"Room bounds calculated: Min {roomMin}, Max {roomMax}");
+        // Debug.Log($"Room bounds calculated: Min {roomMin}, Max {roomMax}");
     }
 
     void LateUpdate()
@@ -114,11 +114,11 @@ public class CameraControllerFixed : MonoBehaviour
     {
         if (Input.GetKeyDown("g"))
         {
-            Debug.Log("G key was pressed.");
+            // Debug.Log("G key was pressed.");
         }
         if (Input.GetKeyDown("h"))
         {
-            Debug.Log("H key was pressed.");
+            // Debug.Log("H key was pressed.");
         }
         CameraZoom();
 

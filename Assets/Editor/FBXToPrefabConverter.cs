@@ -73,7 +73,7 @@ public class FBXToPrefabConverter : EditorWindow
                 if (existingPrefab != null)
                 {
                     PrefabUtility.SaveAsPrefabAssetAndConnect(fbxObject, prefabPath, InteractionMode.AutomatedAction);
-                    Debug.Log($"Updated prefab: {prefabPath}");
+                    // Debug.Log($"Updated prefab: {prefabPath}");
                 }
                 else
                 {
@@ -83,7 +83,7 @@ public class FBXToPrefabConverter : EditorWindow
                         Debug.LogError($"Failed to create prefab: {prefabPath}");
                         continue;
                     }
-                    Debug.Log($"Created prefab: {prefabPath}");
+                    // Debug.Log($"Created prefab: {prefabPath}");
                 }
             }
         }

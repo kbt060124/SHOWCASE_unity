@@ -37,7 +37,7 @@ public class CategoryButton : MonoBehaviour
             colors.pressedColor = targetColor;
             colors.highlightedColor = targetColor;
             colors.disabledColor = targetColor;
-            
+
             button.colors = colors;
 
             // ボタンの背景イメージの色を直接設定
@@ -46,8 +46,8 @@ public class CategoryButton : MonoBehaviour
             {
                 buttonImage.color = targetColor;
             }
-            
-            Debug.Log($"Button {gameObject.name} - isSelected: {isSelected}, Color: {targetColor}");
+
+            //Debug.Log($"Button {gameObject.name} - isSelected: {isSelected}, Color: {targetColor}");
         }
 
         if (buttonText != null)

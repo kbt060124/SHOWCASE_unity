@@ -12,13 +12,9 @@ public class ObjectDeleter : ObjectSelector
     {
         if (selectedObject != null)
         {
-            Debug.Log("オブジェクトを削除: " + selectedObject.name);
+            // Debug.Log("オブジェクトを削除: " + selectedObject.name);
             Destroy(selectedObject);
             selectedObject = null;
-        }
-        else
-        {
-            Debug.Log("削除するオブジェクトが選択されていません");
         }
     }
 }

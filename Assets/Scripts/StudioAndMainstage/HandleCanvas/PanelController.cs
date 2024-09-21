@@ -13,7 +13,7 @@ public class PanelController : MonoBehaviour
     {
         closeButton.onClick.AddListener(HidePanel);
         showButton.onClick.AddListener(ShowPanel);
-        Debug.Log("PanelController: 初期化完了");
+        // Debug.Log("PanelController: 初期化完了");
 
         HidePanel();
     }
@@ -24,7 +24,7 @@ public class PanelController : MonoBehaviour
         panel.SetActive(isPanelVisible);
         closeButton.gameObject.SetActive(false);
         showButton.gameObject.SetActive(true);
-        Debug.Log("PanelController:" + isPanelVisible);
+        // Debug.Log("PanelController:" + isPanelVisible);
     }
 
     private void ShowPanel()
@@ -33,7 +33,7 @@ public class PanelController : MonoBehaviour
         panel.SetActive(isPanelVisible);
         closeButton.gameObject.SetActive(true);
         showButton.gameObject.SetActive(false);
-        Debug.Log("PanelController:" + isPanelVisible);
+        // Debug.Log("PanelController:" + isPanelVisible);
     }
 
     public bool IsPanelVisible()
