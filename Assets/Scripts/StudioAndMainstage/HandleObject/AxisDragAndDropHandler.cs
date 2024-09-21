@@ -3,34 +3,40 @@ using UnityEngine.EventSystems;
 
 public class AxisDragAndDropHandler : ObjectSelector
 {
-    private bool isXZMode = true;
+    private const float Y_MOVEMENT_THRESHOLD = 1f;
+
     private Plane xzPlane;
-    private float initialY;
-    private Vector3 screenPoint;
     private Vector3 initialPosition;
-    private GameObject wallRight;
-    private GameObject wallLeft;
-    private GameObject wallBack;
-    private GameObject wallFront;
-    private GameObject ceiling;
-    private GameObject floor;
+    private float initialY;
+
     private CanvasManager canvasManager;
+
+    private struct RoomBoundaries
+    {
+        public GameObject Right, Left, Back, Front, Ceiling, Floor;
+    }
+    private RoomBoundaries roomBoundaries;
+
+    //------------------------------------------------
+    // 初期化と設定
+    //------------------------------------------------
 
     void Start()
     {
+        InitializeComponents();
+        SetInitialMode();
+    }
+
+    private void InitializeComponents()
+    {
         xzPlane = new Plane(Vector3.up, Vector3.zero);
-        wallRight = GameObject.FindGameObjectWithTag("WallRight");
-        wallLeft = GameObject.FindGameObjectWithTag("WallLeft");
-        wallBack = GameObject.FindGameObjectWithTag("WallBack");
-        wallFront = GameObject.FindGameObjectWithTag("WallFront");
-        ceiling = GameObject.FindGameObjectWithTag("Ceiling");
-        floor = GameObject.FindGameObjectWithTag("Floor");
+        roomBoundaries.Right = GameObject.FindGameObjectWithTag("WallRight");
+        roomBoundaries.Left = GameObject.FindGameObjectWithTag("WallLeft");
+        roomBoundaries.Back = GameObject.FindGameObjectWithTag("WallBack");
+        roomBoundaries.Front = GameObject.FindGameObjectWithTag("WallFront");
+        roomBoundaries.Ceiling = GameObject.FindGameObjectWithTag("Ceiling");
+        roomBoundaries.Floor = GameObject.FindGameObjectWithTag("Floor");
 
-        // 初期状態をXZ軸モードに設定
-        OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.AxisDragAndDropXZ);
-        Debug.Log("初期状態：XZ軸モードに設定しました");
-
-        // CanvasManagerの参照を取得
         canvasManager = FindObjectOfType<CanvasManager>();
         if (canvasManager == null)
         {
@@ -38,22 +44,26 @@ public class AxisDragAndDropHandler : ObjectSelector
         }
     }
 
+    private void SetInitialMode()
+    {
+        OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.AxisDragAndDropXZ);
+        Debug.Log("初期状態：XZ軸モードに設定しました");
+    }
+
+    //------------------------------------------------
+    // モード切り替えと更新
+    //------------------------------------------------
+
     public void ToggleAxisMode()
     {
-        // Mainstageがアクティブな場合は何もしない
         if (canvasManager != null && canvasManager.isMainstageActive) return;
 
         OperationModeManager.OperationMode currentMode = OperationModeManager.Instance.GetCurrentMode();
+        OperationModeManager.OperationMode newMode = currentMode == OperationModeManager.OperationMode.AxisDragAndDropXY
+            ? OperationModeManager.OperationMode.AxisDragAndDropXZ
+            : OperationModeManager.OperationMode.AxisDragAndDropXY;
 
-        if (currentMode == OperationModeManager.OperationMode.AxisDragAndDropXY)
-        {
-            OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.AxisDragAndDropXZ);
-        }
-        else
-        {
-            OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.AxisDragAndDropXY);
-        }
-
+        OperationModeManager.Instance.SetMode(newMode);
         UpdateButtonState();
     }
 
@@ -70,144 +80,147 @@ public class AxisDragAndDropHandler : ObjectSelector
         }
     }
 
+    //------------------------------------------------
+    // メインループと操作処理
+    //------------------------------------------------
+
     void Update()
     {
-        if (canvasManager != null && canvasManager.isMainstageActive) return;
+        if (ShouldSkipUpdate()) return;
 
-        if (!OperationModeManager.Instance.CanMove()) return;
+        HandleObjectSelection();
+        HandleObjectMovement();
+    }
 
+    private bool ShouldSkipUpdate()
+    {
+        return (canvasManager != null && canvasManager.isMainstageActive) || !OperationModeManager.Instance.CanMove();
+    }
+
+    private void HandleObjectSelection()
+    {
         if (SelectObject())
         {
-            screenPoint = Camera.main.WorldToScreenPoint(selectedObject.transform.position);
             initialPosition = selectedObject.transform.position;
             initialY = selectedObject.transform.position.y;
         }
+    }
 
-        if (selectedObject != null && Input.GetMouseButton(0))
+    private void HandleObjectMovement()
+    {
+        if (selectedObject == null || !Input.GetMouseButton(0) || EventSystem.current.IsPointerOverGameObject()) return;
+
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Vector3 newPosition = CalculateNewPosition(ray, OperationModeManager.Instance.IsXYMode());
+
+        if (!IsColliding(newPosition))
         {
-            // UIの上でクリックされていないか確認
-            if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
-            {
-                return; // UI要素上でクリックされた場合は処理をスキップ
-            }
-
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-            if (OperationModeManager.Instance.CanMove())
-            {
-                if (OperationModeManager.Instance.IsXYMode())
-                {
-                    // XY平面での移動（Y座標のみ操作可能）
-                    Plane xyPlane = new Plane(Camera.main.transform.forward, selectedObject.transform.position);
-                    if (xyPlane.Raycast(ray, out float distance))
-                    {
-                        Vector3 hitPoint = ray.GetPoint(distance);
-                        Vector3 newPosition = new Vector3(
-                            selectedObject.transform.position.x,
-                            hitPoint.y,
-                            selectedObject.transform.position.z
-                        );
-                        // Y座標の変更が一定以下の場合のみ適用
-                        float yDifference = Mathf.Abs(newPosition.y - selectedObject.transform.position.y);
-                        float yThreshold = 1f;
-                        if (yDifference < yThreshold)
-                        {
-                            if (!IsColliding(newPosition))
-                            {
-                                selectedObject.transform.position = newPosition;
-                            }
-                            else
-                            {
-                                Debug.Log($"衝突のため移動をキャンセル。Y座標: {newPosition.y:F3}, 差分: {yDifference:F3}");
-                            }
-                        }
-                        else
-                        {
-                            Debug.Log($"Y座標の変更が大きすぎるため移動をキャンセル。差分: {yDifference:F3}, 閾値: {yThreshold}");
-                        }
-                    }
-                }
-                else
-                {
-                    // XZ平面での移動（Y座標固定）
-                    if (xzPlane.Raycast(ray, out float distance))
-                    {
-                        Vector3 hitPoint = ray.GetPoint(distance);
-                        Vector3 newPosition = new Vector3(hitPoint.x, selectedObject.transform.position.y, hitPoint.z);
-                        if (!IsColliding(newPosition))
-                        {
-                            selectedObject.transform.position = newPosition;
-                        }
-                    }
-                }
-            }
+            selectedObject.transform.position = newPosition;
         }
     }
 
-    Vector3 CalculateNewPosition()
+    //------------------------------------------------
+    // 位置計算
+    //------------------------------------------------
+
+    private Vector3 CalculateNewPosition(Ray ray, bool isXYMode)
     {
-        return isXZMode ? CalculateXZPosition() : CalculateYPosition();
+        return isXYMode ? CalculateXYPosition(ray) : CalculateXZPosition(ray);
     }
 
-    Vector3 CalculateXZPosition()
+    private Vector3 CalculateXYPosition(Ray ray)
     {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        if (xzPlane.Raycast(ray, out float rayDistance))
+        Plane xyPlane = new Plane(Camera.main.transform.forward, selectedObject.transform.position);
+        if (xyPlane.Raycast(ray, out float distance))
         {
-            Vector3 newPosition = ray.GetPoint(rayDistance);
-            newPosition.y = initialY;
-            return newPosition;
+            Vector3 hitPoint = ray.GetPoint(distance);
+            Vector3 newPosition = new Vector3(
+                selectedObject.transform.position.x,
+                hitPoint.y,
+                selectedObject.transform.position.z
+            );
+
+            if (IsYMovementValid(newPosition.y))
+            {
+                return newPosition;
+            }
         }
         return selectedObject.transform.position;
     }
 
-    Vector3 CalculateYPosition()
+    private Vector3 CalculateXZPosition(Ray ray)
     {
-        float screenX = screenPoint.x;
-        float screenY = Input.mousePosition.y;
-        float screenZ = screenPoint.z;
-
-        Vector3 currentScreenPoint = new Vector3(screenX, screenY, screenZ);
-        return Camera.main.ScreenToWorldPoint(currentScreenPoint);
+        if (xzPlane.Raycast(ray, out float distance))
+        {
+            Vector3 hitPoint = ray.GetPoint(distance);
+            return new Vector3(hitPoint.x, selectedObject.transform.position.y, hitPoint.z);
+        }
+        return selectedObject.transform.position;
     }
+
+    private bool IsYMovementValid(float newY)
+    {
+        float yDifference = Mathf.Abs(newY - selectedObject.transform.position.y);
+        if (yDifference < Y_MOVEMENT_THRESHOLD)
+        {
+            return true;
+        }
+        Debug.Log($"Y座標の変更が大きすぎるため移動をキャンセル。差分: {yDifference:F3}, 閾値: {Y_MOVEMENT_THRESHOLD}");
+        return false;
+    }
+
+    //------------------------------------------------
+    // 衝突判定
+    //------------------------------------------------
 
     private bool IsColliding(Vector3 newPosition)
     {
-        // Mainstageがアクティブな場合は衝突していないとみなす
         if (canvasManager != null && canvasManager.isMainstageActive) return false;
         if (selectedObject == null) return false;
 
         Bounds objectBounds = GetObjectBounds(selectedObject, newPosition);
 
-        // 部屋の境界との衝突チェック
-        if (wallRight != null && objectBounds.max.x > wallRight.transform.position.x) return true;
-        if (wallLeft != null && objectBounds.min.x < wallLeft.transform.position.x) return true;
-        if (wallBack != null && objectBounds.max.z > wallBack.transform.position.z) return true;
-        if (wallFront != null && objectBounds.min.z < wallFront.transform.position.z) return true; // 前壁との衝突チェックを追加
-        if (ceiling != null && objectBounds.max.y > ceiling.transform.position.y) return true;
+        if (IsCollidingWithWalls(objectBounds)) return true;
+        if (IsCollidingWithFloor(objectBounds, newPosition)) return false;
+        if (IsCollidingWithOtherObjects(objectBounds)) return true;
 
-        // 床との衝突チェック（オブジェクトを床の上に配置）
-        if (floor != null)
+        return false;
+    }
+
+    private bool IsCollidingWithWalls(Bounds objectBounds)
+    {
+        return (roomBoundaries.Right != null && objectBounds.max.x > roomBoundaries.Right.transform.position.x) ||
+               (roomBoundaries.Left != null && objectBounds.min.x < roomBoundaries.Left.transform.position.x) ||
+               (roomBoundaries.Back != null && objectBounds.max.z > roomBoundaries.Back.transform.position.z) ||
+               (roomBoundaries.Front != null && objectBounds.min.z < roomBoundaries.Front.transform.position.z) ||
+               (roomBoundaries.Ceiling != null && objectBounds.max.y > roomBoundaries.Ceiling.transform.position.y);
+    }
+
+    private bool IsCollidingWithFloor(Bounds objectBounds, Vector3 newPosition)
+    {
+        if (roomBoundaries.Floor != null)
         {
-            float floorY = floor.transform.position.y;
+            float floorY = roomBoundaries.Floor.transform.position.y;
             if (objectBounds.min.y < floorY)
             {
                 float adjustment = floorY - objectBounds.min.y;
                 selectedObject.transform.position = new Vector3(newPosition.x, newPosition.y + adjustment, newPosition.z);
-                return false; // 床に接地させたので、衝突としては扱わない
+                return true;
             }
         }
+        return false;
+    }
 
-        // 他のオブジェクトとの衝突チェック
-        Collider[] hitColliders = Physics.OverlapBox(objectBounds.center, objectBounds.extents, selectedObject.transform.rotation);
+    private bool IsCollidingWithOtherObjects(Bounds objectBounds)
+    {
+        Collider[] hitColliders = Physics.OverlapBox(objectBounds.center, objectBounds.extents, Quaternion.identity);
         foreach (Collider hitCollider in hitColliders)
         {
-            if (hitCollider.gameObject != selectedObject && hitCollider.gameObject != floor)
+            if (hitCollider.gameObject != selectedObject && hitCollider.gameObject != roomBoundaries.Floor)
             {
                 return true;
             }
         }
-
         return false;
     }
 
@@ -221,7 +234,6 @@ public class AxisDragAndDropHandler : ObjectSelector
             bounds.Encapsulate(renderer.bounds);
         }
 
-        // オブジェクトの現在位置と新しい位置の差分を計算
         Vector3 offset = position - obj.transform.position;
         bounds.center += offset;
 
