@@ -61,6 +61,20 @@ public class SceneData
 public class SaveManager : MonoBehaviour
 {
     private const string SAVE_FILE_NAME = "scene_data.json";
+    [SerializeField] private GameObject saveCompletedPopup;
+    [SerializeField] private Canvas studioCanvas; // StudioCanvasへの参照を追加
+    private CanvasGroup popupCanvasGroup;
+
+    private void Start()
+    {
+        // ポップアップのCanvasGroupを取得
+        popupCanvasGroup = saveCompletedPopup.GetComponent<CanvasGroup>();
+        if (popupCanvasGroup == null)
+        {
+            popupCanvasGroup = saveCompletedPopup.AddComponent<CanvasGroup>();
+        }
+        saveCompletedPopup.SetActive(false);
+    }
 
     public void SaveScene()
     {
@@ -88,6 +102,8 @@ public class SaveManager : MonoBehaviour
         Debug.Log("シーンが保存されました");
         Debug.Log($"保存されたJSONデータ: {json}");
         Debug.Log($"保存先: {savePath}");
+
+        ShowSaveCompletedPopup();
     }
 
     private void SaveObjectRecursively(GameObject obj, SceneData sceneData, int parentIndex = -1)
@@ -223,7 +239,7 @@ public class SaveManager : MonoBehaviour
                 Debug.Log($"位置: {newObj.transform.position}, 回転: {newObj.transform.rotation.eulerAngles}, スケール: {newObj.transform.localScale}");
                 Debug.Log($"コンポーネント: {string.Join(", ", newObj.GetComponents<Component>().Select(c => c.GetType().Name))}");
 
-                // Colliderがな場合��追加
+                // Colliderがな場合追加
                 if (newObj.GetComponent<Collider>() == null)
                 {
                     newObj.AddComponent<BoxCollider>();
@@ -307,6 +323,41 @@ public class SaveManager : MonoBehaviour
             }
             saveManager.LoadScene();
         }
+    }
+
+    private void ShowSaveCompletedPopup()
+    {
+        saveCompletedPopup.SetActive(true);
+        StartCoroutine(FadeInOutPopup());
+    }
+
+    private IEnumerator FadeInOutPopup()
+    {
+        // フェードイン
+        float duration = 0.5f;
+        float time = 0;
+        while (time < duration)
+        {
+            popupCanvasGroup.alpha = Mathf.Lerp(0, 1, time / duration);
+            time += Time.deltaTime;
+            yield return null;
+        }
+        popupCanvasGroup.alpha = 1;
+
+        // 表示時間
+        yield return new WaitForSeconds(2f);
+
+        // フェードアウト
+        time = 0;
+        while (time < duration)
+        {
+            popupCanvasGroup.alpha = Mathf.Lerp(1, 0, time / duration);
+            time += Time.deltaTime;
+            yield return null;
+        }
+        popupCanvasGroup.alpha = 0;
+
+        saveCompletedPopup.SetActive(false);
     }
 
     // Startメソッドを削除または無効化
