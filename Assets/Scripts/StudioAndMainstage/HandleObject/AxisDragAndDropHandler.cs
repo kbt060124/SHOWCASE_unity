@@ -1,16 +1,15 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 public class AxisDragAndDropHandler : ObjectSelector
 {
+
     private Plane xzPlane;
     private Vector3 initialPosition;
     private float initialY;
-    private Vector2 lastTouchPosition;
-    private bool isObjectSelected;
+    private bool isDragging = false;
+    private Vector3 dragStartPosition;
+    private float dragThreshold = 5f;
 
     private CanvasManager canvasManager;
 
@@ -91,11 +90,8 @@ public class AxisDragAndDropHandler : ObjectSelector
     {
         if (ShouldSkipUpdate()) return;
 
-        #if UNITY_EDITOR
-        HandleObjectSelectionAndMovementForEditor();
-        #else
-        HandleObjectSelectionAndMovementForMobile();
-        #endif
+        HandleObjectSelection();
+        HandleObjectMovement();
     }
 
     private bool ShouldSkipUpdate()
@@ -103,101 +99,44 @@ public class AxisDragAndDropHandler : ObjectSelector
         return (canvasManager != null && canvasManager.isMainstageActive) || !OperationModeManager.Instance.CanMove();
     }
 
-    #if UNITY_EDITOR
-    private void HandleObjectSelectionAndMovementForEditor()
-    {
-        // オブジェクトの選択
-        if (Input.GetMouseButtonDown(0))
-        {
-            SelectObject();
-        }
-
-        // オブジェクトの移動
-        if (selectedObject != null && Input.GetMouseButton(0))
-        {
-            MoveSelectedObject();
-        }
-    }
-
-    private void MoveSelectedObject()
-    {
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        bool isXYMode = OperationModeManager.Instance.IsCurrentMode(OperationModeManager.OperationMode.AxisDragAndDropXY);
-        Vector3 newPosition = CalculateNewPosition(ray, isXYMode);
-
-        if (!IsColliding(newPosition))
-        {
-            selectedObject.transform.position = newPosition;
-        }
-    }
-    #else
-    private void HandleObjectSelectionAndMovementForMobile()
-    {
-        if (Input.touchCount > 0)
-        {
-            Touch touch = Input.GetTouch(0);
-
-            switch (touch.phase)
-            {
-                case TouchPhase.Began:
-                    HandleTouchBegan(touch);
-                    break;
-                case TouchPhase.Moved:
-                    HandleTouchMoved(touch);
-                    break;
-                case TouchPhase.Ended:
-                    isObjectSelected = false;
-                    break;
-            }
-        }
-    }
-
-    private void HandleTouchBegan(Touch touch)
+    private void HandleObjectSelection()
     {
         if (SelectObject())
         {
-            isObjectSelected = true;
             initialPosition = selectedObject.transform.position;
             initialY = selectedObject.transform.position.y;
-            lastTouchPosition = touch.position;
         }
     }
 
-    private void HandleTouchMoved(Touch touch)
+    private void HandleObjectMovement()
     {
-        if (!isObjectSelected || EventSystem.current.IsPointerOverGameObject(touch.fingerId)) return;
+        if (selectedObject == null || EventSystem.current.IsPointerOverGameObject()) return;
 
-        Vector2 deltaPosition = touch.position - lastTouchPosition;
-        Vector3 newPosition = CalculateNewPositionForMobile(deltaPosition);
-
-        if (!IsColliding(newPosition))
+        if (Input.GetMouseButtonDown(0))
         {
-            selectedObject.transform.position = newPosition;
+            isDragging = true;
+            dragStartPosition = Input.mousePosition;
+        }
+        else if (Input.GetMouseButtonUp(0))
+        {
+            isDragging = false;
         }
 
-        lastTouchPosition = touch.position;
-    }
-
-    private Vector3 CalculateNewPositionForMobile(Vector2 deltaPosition)
-    {
-        bool isXYMode = OperationModeManager.Instance.IsCurrentMode(OperationModeManager.OperationMode.AxisDragAndDropXY);
-        Vector3 currentPosition = selectedObject.transform.position;
-
-        if (isXYMode)
+        if (isDragging && Input.GetMouseButton(0))
         {
-            // Y座標のみ移動
-            float yMovement = deltaPosition.y * 0.01f; // 感度調整が必要かもしれません
-            return new Vector3(currentPosition.x, currentPosition.y + yMovement, currentPosition.z);
-        }
-        else
-        {
-            // XZ座標を移動
-            float xMovement = deltaPosition.x * 0.01f;
-            float zMovement = deltaPosition.y * 0.01f;
-            return new Vector3(currentPosition.x + xMovement, currentPosition.y, currentPosition.z + zMovement);
+            Vector3 dragDelta = Input.mousePosition - dragStartPosition;
+            if (dragDelta.magnitude > dragThreshold)
+            {
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                Vector3 newPosition = CalculateNewPosition(ray, OperationModeManager.Instance.IsXYMode());
+
+                if (!IsColliding(newPosition))
+                {
+                    selectedObject.transform.position = newPosition;
+                }
+            }
         }
     }
-    #endif
 
     //------------------------------------------------
     // 位置計算
@@ -306,23 +245,4 @@ public class AxisDragAndDropHandler : ObjectSelector
 
         return bounds;
     }
-
-    #if UNITY_EDITOR
-    // エディタ専用のコード
-    [CustomEditor(typeof(AxisDragAndDropHandler))]
-    public class AxisDragAndDropHandlerEditor : Editor
-    {
-        public override void OnInspectorGUI()
-        {
-            DrawDefaultInspector();
-
-            AxisDragAndDropHandler handler = (AxisDragAndDropHandler)target;
-
-            if (GUILayout.Button("軸モード切り替え"))
-            {
-                handler.ToggleAxisMode();
-            }
-        }
-    }
-    #endif
 }
