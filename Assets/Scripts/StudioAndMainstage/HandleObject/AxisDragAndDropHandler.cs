@@ -15,7 +15,6 @@ public class AxisDragAndDropHandler : ObjectSelector
     private GameObject ceiling;
     private GameObject floor;
     private CanvasManager canvasManager;
-    private ButtonController buttonController;
 
     void Start()
     {
@@ -37,8 +36,6 @@ public class AxisDragAndDropHandler : ObjectSelector
         {
             Debug.LogError("CanvasManagerが見つかりません。");
         }
-
-        buttonController = FindObjectOfType<ButtonController>();
     }
 
     public void ToggleAxisMode()
@@ -65,7 +62,14 @@ public class AxisDragAndDropHandler : ObjectSelector
     private void UpdateButtonState()
     {
         bool isAxisModeXY = OperationModeManager.Instance.IsCurrentMode(OperationModeManager.OperationMode.AxisDragAndDropXY);
-        buttonController.UpdateButtonState(buttonController.axisButton, buttonController.axisNormalSprite, buttonController.axisSelectedSprite, isAxisModeXY);
+        if (buttonController != null)
+        {
+            buttonController.UpdateButtonState(buttonController.axisButton, buttonController.axisNormalSprite, buttonController.axisSelectedSprite, isAxisModeXY);
+        }
+        else
+        {
+            Debug.LogWarning("ButtonController is not assigned in AxisDragAndDropHandler.");
+        }
     }
 
     void Update()

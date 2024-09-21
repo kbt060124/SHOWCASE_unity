@@ -3,12 +3,6 @@ using UnityEngine;
 public class ObjectRotator : ObjectSelector
 {
     private Vector3 lastMousePosition;
-    private ButtonController buttonController;
-
-    private void Start()
-    {
-        buttonController = FindObjectOfType<ButtonController>();
-    }
 
     public void ToggleRotationMode()
     {
@@ -19,7 +13,14 @@ public class ObjectRotator : ObjectSelector
     private void UpdateButtonState()
     {
         bool isRotateMode = OperationModeManager.Instance.IsCurrentMode(OperationModeManager.OperationMode.Rotate);
-        buttonController.UpdateButtonState(buttonController.rotateButton, buttonController.rotateNormalSprite, buttonController.rotateSelectedSprite, isRotateMode);
+        if (buttonController != null)
+        {
+            buttonController.UpdateButtonState(buttonController.rotateButton, buttonController.rotateNormalSprite, buttonController.rotateSelectedSprite, isRotateMode);
+        }
+        else
+        {
+            Debug.LogWarning("ButtonController is not assigned in ObjectRotator.");
+        }
     }
 
     void Update()

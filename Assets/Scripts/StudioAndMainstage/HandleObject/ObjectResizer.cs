@@ -4,7 +4,6 @@ public class ObjectResizer : ObjectSelector
 {
     private float currentScaleFactor = 1f;
     private float initialDistance;
-    private ButtonController buttonController;
 
     private void Start()
     {
@@ -20,7 +19,14 @@ public class ObjectResizer : ObjectSelector
     private void UpdateButtonState()
     {
         bool isResizeMode = OperationModeManager.Instance.IsCurrentMode(OperationModeManager.OperationMode.Resize);
-        buttonController.UpdateButtonState(buttonController.resizeButton, buttonController.resizeNormalSprite, buttonController.resizeSelectedSprite, isResizeMode);
+        if (buttonController != null)
+        {
+            buttonController.UpdateButtonState(buttonController.resizeButton, buttonController.resizeNormalSprite, buttonController.resizeSelectedSprite, isResizeMode);
+        }
+        else
+        {
+            Debug.LogWarning("ButtonController is not assigned in ObjectResizer.");
+        }
     }
 
     void Update()
