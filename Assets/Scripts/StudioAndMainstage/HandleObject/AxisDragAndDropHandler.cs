@@ -48,12 +48,10 @@ public class AxisDragAndDropHandler : ObjectSelector
         if (currentMode == OperationModeManager.OperationMode.AxisDragAndDropXY)
         {
             OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.AxisDragAndDropXZ);
-            Debug.Log("XZ軸モードに切り替えました");
         }
         else
         {
             OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.AxisDragAndDropXY);
-            Debug.Log("XY軸モードに切り替えました");
         }
     }
 
