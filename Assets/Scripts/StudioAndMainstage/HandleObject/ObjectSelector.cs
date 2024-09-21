@@ -63,6 +63,7 @@ public class ObjectSelector : MonoBehaviour
             // UIの要素がクリックされた場合は、オブジェクト選択を行わない
             if (IsPointerOverUIObject())
             {
+                Debug.Log("UIオブジェクトがクリックされました。オブジェクト選択をスキップします。");
                 return false;
             }
 
