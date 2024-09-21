@@ -92,9 +92,23 @@ public class AxisDragAndDropHandler : ObjectSelector
                             hitPoint.y,
                             selectedObject.transform.position.z
                         );
-                        if (!IsColliding(newPosition))
+                        // Y座標の変更が一定以下の場合のみ適用
+                        float yDifference = Mathf.Abs(newPosition.y - selectedObject.transform.position.y);
+                        float yThreshold = 1f;
+                        if (yDifference < yThreshold)
                         {
-                            selectedObject.transform.position = newPosition;
+                            if (!IsColliding(newPosition))
+                            {
+                                selectedObject.transform.position = newPosition;
+                            }
+                            else
+                            {
+                                Debug.Log($"衝突のため移動をキャンセル。Y座標: {newPosition.y:F3}, 差分: {yDifference:F3}");
+                            }
+                        }
+                        else
+                        {
+                            Debug.Log($"Y座標の変更が大きすぎるため移動をキャンセル。差分: {yDifference:F3}, 閾値: {yThreshold}");
                         }
                     }
                 }
