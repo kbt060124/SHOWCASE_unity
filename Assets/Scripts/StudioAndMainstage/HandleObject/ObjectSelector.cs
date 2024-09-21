@@ -125,7 +125,7 @@ public class ObjectSelector : MonoBehaviour
         eventDataCurrentPosition.position = Input.touchCount > 0 ? Input.GetTouch(0).position : (Vector2)Input.mousePosition;
         List<RaycastResult> results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
-        
+
         foreach (RaycastResult result in results)
         {
             if (result.gameObject.GetComponent<FixedJoystick>() != null)
@@ -134,9 +134,9 @@ public class ObjectSelector : MonoBehaviour
                 return true;
             }
         }
-        
-        return Input.touchCount > 0 ? 
-            EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId) : 
+
+        return Input.touchCount > 0 ?
+            EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId) :
             EventSystem.current.IsPointerOverGameObject();
     }
 
