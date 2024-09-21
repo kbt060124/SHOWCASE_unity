@@ -3,7 +3,6 @@ using UnityEngine.EventSystems;
 
 public class AxisDragAndDropHandler : ObjectSelector
 {
-    private const float Y_MOVEMENT_THRESHOLD = 0.8f;
 
     private Plane xzPlane;
     private Vector3 initialPosition;
@@ -134,16 +133,11 @@ public class AxisDragAndDropHandler : ObjectSelector
         if (xyPlane.Raycast(ray, out float distance))
         {
             Vector3 hitPoint = ray.GetPoint(distance);
-            Vector3 newPosition = new Vector3(
+            return new Vector3(
                 selectedObject.transform.position.x,
                 hitPoint.y,
                 selectedObject.transform.position.z
             );
-
-            if (IsYMovementValid(newPosition.y))
-            {
-                return newPosition;
-            }
         }
         return selectedObject.transform.position;
     }
@@ -159,17 +153,6 @@ public class AxisDragAndDropHandler : ObjectSelector
             return new Vector3(hitPoint.x, selectedObject.transform.position.y, hitPoint.z);
         }
         return selectedObject.transform.position;
-    }
-
-    private bool IsYMovementValid(float newY)
-    {
-        float yDifference = Mathf.Abs(newY - selectedObject.transform.position.y);
-        if (yDifference < Y_MOVEMENT_THRESHOLD)
-        {
-            return true;
-        }
-        Debug.Log($"Y座標の変更が大きすぎるため移動をキャンセル。差分: {yDifference:F3}, 閾値: {Y_MOVEMENT_THRESHOLD}");
-        return false;
     }
 
     //------------------------------------------------
@@ -192,11 +175,11 @@ public class AxisDragAndDropHandler : ObjectSelector
 
     private bool IsCollidingWithWalls(Bounds objectBounds)
     {
-        return (roomBoundaries.Right != null && objectBounds.max.x > roomBoundaries.Right.transform.position.x) ||
-               (roomBoundaries.Left != null && objectBounds.min.x < roomBoundaries.Left.transform.position.x) ||
-               (roomBoundaries.Back != null && objectBounds.max.z > roomBoundaries.Back.transform.position.z) ||
-               (roomBoundaries.Front != null && objectBounds.min.z < roomBoundaries.Front.transform.position.z) ||
-               (roomBoundaries.Ceiling != null && objectBounds.max.y > roomBoundaries.Ceiling.transform.position.y);
+        return  (roomBoundaries.Right != null && objectBounds.max.x > roomBoundaries.Right.transform.position.x) ||
+                (roomBoundaries.Left != null && objectBounds.min.x < roomBoundaries.Left.transform.position.x) ||
+                (roomBoundaries.Back != null && objectBounds.max.z > roomBoundaries.Back.transform.position.z) ||
+                (roomBoundaries.Front != null && objectBounds.min.z < roomBoundaries.Front.transform.position.z) ||
+                (roomBoundaries.Ceiling != null && objectBounds.max.y > roomBoundaries.Ceiling.transform.position.y);
     }
 
     private bool IsCollidingWithFloor(Bounds objectBounds, Vector3 newPosition)
