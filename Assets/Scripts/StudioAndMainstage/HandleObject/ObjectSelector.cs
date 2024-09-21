@@ -228,21 +228,5 @@ public class ObjectSelector : MonoBehaviour
         {
             buttonController.ObjectDeselected();
         }
-
-        OperationModeManager.Instance.OnModeChanged += LogObjectPositionOnModeChange;
-    }
-
-    private void OnDestroy()
-    {
-        OperationModeManager.Instance.OnModeChanged -= LogObjectPositionOnModeChange;
-    }
-
-    private void LogObjectPositionOnModeChange(OperationModeManager.OperationMode oldMode, OperationModeManager.OperationMode newMode)
-    {
-        if (selectedObject != null)
-        {
-            Vector3 position = selectedObject.transform.position;
-            Debug.Log($"モード切替のログ: オブジェクト '{selectedObject.name}' の位置: X={position.x}, Y={position.y}, Z={position.z}");
-        }
     }
 }

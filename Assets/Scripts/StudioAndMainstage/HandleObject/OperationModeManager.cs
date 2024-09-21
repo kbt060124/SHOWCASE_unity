@@ -29,9 +29,6 @@ public class OperationModeManager : MonoBehaviour
     private OperationMode currentMode = OperationMode.AxisDragAndDropXZ;
     private bool canMove = true;
 
-    public delegate void ModeChangedHandler(OperationMode oldMode, OperationMode newMode);
-    public event ModeChangedHandler OnModeChanged;
-
     public void ToggleMode(OperationMode mode)
     {
         if (currentMode == mode)
@@ -46,12 +43,9 @@ public class OperationModeManager : MonoBehaviour
 
     public void SetMode(OperationMode mode)
     {
-        OperationMode oldMode = currentMode;
         currentMode = mode;
         canMove = (mode == OperationMode.AxisDragAndDropXY || mode == OperationMode.AxisDragAndDropXZ || mode == OperationMode.None);
-        Debug.Log($"モード変更: {oldMode} -> {currentMode}" + ", 移動可能: " + (canMove ? "はい" : "いいえ"));
-
-        OnModeChanged?.Invoke(oldMode, currentMode);
+        Debug.Log("現在のモード: " + currentMode + ", 移動可能: " + (canMove ? "はい" : "いいえ"));
     }
 
     public bool IsCurrentMode(OperationMode mode)
