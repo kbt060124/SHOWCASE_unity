@@ -83,7 +83,7 @@ public class SaveManager : MonoBehaviour
 
         if (objectsContainer != null)
         {
-            Debug.Log($"'Objects'コンテナが見つかりました。子オブジェクト数: {objectsContainer.transform.childCount}");
+            // Debug.Log($"'Objects'コンテナが見つかりました。子オブジェクト数: {objectsContainer.transform.childCount}");
 
             foreach (Transform child in objectsContainer.transform)
             {
@@ -134,7 +134,7 @@ public class SaveManager : MonoBehaviour
             };
             int currentIndex = sceneData.objects.Count;
             sceneData.objects.Add(objData);
-            Debug.Log($"オブジェクト '{obj.name}' を保存: プレハブパス {objData.prefabPath}, 位置 {obj.transform.localPosition}, 回転 {obj.transform.localRotation.eulerAngles}, スケール {obj.transform.localScale}");
+            // Debug.Log($"オブジェクト '{obj.name}' を保存: プレハブパス {objData.prefabPath}, 位置 {obj.transform.localPosition}, 回転 {obj.transform.localRotation.eulerAngles}, スケール {obj.transform.localScale}");
 
             foreach (Transform child in obj.transform)
             {
@@ -235,9 +235,9 @@ public class SaveManager : MonoBehaviour
                 }
 
                 // オブジェクトの詳細情報をログ出力
-                Debug.Log($"生成されたオブジェクト: {newObj.name}, タグ: {newObj.tag}, レイヤー: {LayerMask.LayerToName(newObj.layer)}");
-                Debug.Log($"位置: {newObj.transform.position}, 回転: {newObj.transform.rotation.eulerAngles}, スケール: {newObj.transform.localScale}");
-                Debug.Log($"コンポーネント: {string.Join(", ", newObj.GetComponents<Component>().Select(c => c.GetType().Name))}");
+                // Debug.Log($"生成されたオブジェクト: {newObj.name}, タグ: {newObj.tag}, レイヤー: {LayerMask.LayerToName(newObj.layer)}");
+                // Debug.Log($"位置: {newObj.transform.position}, 回転: {newObj.transform.rotation.eulerAngles}, スケール: {newObj.transform.localScale}");
+                // Debug.Log($"コンポーネント: {string.Join(", ", newObj.GetComponents<Component>().Select(c => c.GetType().Name))}");
 
                 // Colliderがな場合追加
                 if (newObj.GetComponent<Collider>() == null)
@@ -295,10 +295,8 @@ public class SaveManager : MonoBehaviour
         if (physicsAssigner == null)
         {
             physicsAssigner = gameObject.AddComponent<PhysicsAssigner>();
-            Debug.Log("PhysicsAssignerコンポーネントが追加されました。");
         }
         physicsAssigner.AddPhysicsToChildren();
-        Debug.Log("読み込まれたオブジェクトに物理判定の追加を試みました。");
     }
 
     private void Awake()
