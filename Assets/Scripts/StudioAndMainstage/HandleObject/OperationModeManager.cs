@@ -44,8 +44,16 @@ public class OperationModeManager : MonoBehaviour
     public void SetMode(OperationMode mode)
     {
         currentMode = mode;
-        canMove = (mode == OperationMode.AxisDragAndDropXY || mode == OperationMode.AxisDragAndDropXZ || mode == OperationMode.None);
+        canMove = (mode == OperationMode.AxisDragAndDropXY || mode == OperationMode.AxisDragAndDropXZ);
         Debug.Log("現在のモード: " + currentMode + ", 移動可能: " + (canMove ? "はい" : "いいえ"));
+
+        ButtonController buttonController = FindObjectOfType<ButtonController>();
+        if (buttonController != null)
+        {
+            buttonController.UpdateButtonState(buttonController.resizeButton, buttonController.resizeNormalSprite, buttonController.resizeSelectedSprite, mode == OperationMode.Resize);
+            buttonController.UpdateButtonState(buttonController.rotateButton, buttonController.rotateNormalSprite, buttonController.rotateSelectedSprite, mode == OperationMode.Rotate);
+            buttonController.UpdateButtonState(buttonController.axisButton, buttonController.axisNormalSprite, buttonController.axisSelectedSprite, mode == OperationMode.AxisDragAndDropXY);
+        }
     }
 
     public bool IsCurrentMode(OperationMode mode)

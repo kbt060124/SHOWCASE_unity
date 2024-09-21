@@ -13,7 +13,7 @@ public class ObjectSelector : MonoBehaviour
     private OutlineResources outlineResources; // インスペクターでアサインする
 
     [SerializeField]
-    private ButtonController buttonController;
+    protected ButtonController buttonController;
 
     private void SetKinematicState(GameObject obj, bool isKinematic)
     {

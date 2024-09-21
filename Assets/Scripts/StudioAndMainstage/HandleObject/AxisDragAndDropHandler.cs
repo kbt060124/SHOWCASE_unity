@@ -53,6 +53,21 @@ public class AxisDragAndDropHandler : ObjectSelector
         {
             OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.AxisDragAndDropXY);
         }
+
+        UpdateButtonState();
+    }
+
+    private void UpdateButtonState()
+    {
+        bool isAxisModeXY = OperationModeManager.Instance.IsCurrentMode(OperationModeManager.OperationMode.AxisDragAndDropXY);
+        if (buttonController != null)
+        {
+            buttonController.UpdateButtonState(buttonController.axisButton, buttonController.axisNormalSprite, buttonController.axisSelectedSprite, isAxisModeXY);
+        }
+        else
+        {
+            Debug.LogWarning("ButtonController is not assigned in AxisDragAndDropHandler.");
+        }
     }
 
     void Update()

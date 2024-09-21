@@ -7,7 +7,20 @@ public class ObjectRotator : ObjectSelector
     public void ToggleRotationMode()
     {
         OperationModeManager.Instance.ToggleMode(OperationModeManager.OperationMode.Rotate);
-        Debug.Log("回転モード: " + (OperationModeManager.Instance.IsCurrentMode(OperationModeManager.OperationMode.Rotate) ? "オン" : "オフ"));
+        UpdateButtonState();
+    }
+
+    private void UpdateButtonState()
+    {
+        bool isRotateMode = OperationModeManager.Instance.IsCurrentMode(OperationModeManager.OperationMode.Rotate);
+        if (buttonController != null)
+        {
+            buttonController.UpdateButtonState(buttonController.rotateButton, buttonController.rotateNormalSprite, buttonController.rotateSelectedSprite, isRotateMode);
+        }
+        else
+        {
+            Debug.LogWarning("ButtonController is not assigned in ObjectRotator.");
+        }
     }
 
     void Update()
