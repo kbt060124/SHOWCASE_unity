@@ -10,8 +10,8 @@ public class CameraControllerFloating : MonoBehaviour
     private Camera cam;
     public FloatingJoystick inputMove; //左画面JoyStick
     public FloatingJoystick inputRotate; //右画面JoyStick
-    float moveSpeed = 5.0f; //移動する速度
-    float rotateSpeed = 0.5f;  //回転する速度
+    float moveSpeed = 2.0f; //移動する速度
+    float rotateSpeed = 2.0f;  //回転する速度
 
     private GameObject room;
     private Vector3 roomMin;
