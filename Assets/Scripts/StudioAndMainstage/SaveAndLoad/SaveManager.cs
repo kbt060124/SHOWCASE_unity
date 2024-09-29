@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Collections;
-using System.Linq; // この行を追加
+using System.Linq;
 
 [System.Serializable]
 public class SerializableVector3
@@ -50,6 +50,8 @@ public class ObjectData
     public SerializableQuaternion rotation;
     public SerializableVector3 scale;
     public int parentIndex;
+    public string texturePath;
+    public string mtlPath;
 }
 
 [System.Serializable]
@@ -62,7 +64,7 @@ public class SaveManager : MonoBehaviour
 {
     private const string SAVE_FILE_NAME = "scene_data.json";
     [SerializeField] private GameObject saveCompletedPopup;
-    [SerializeField] private Canvas studioCanvas; // StudioCanvasへの参照を追加
+    [SerializeField] private Canvas studioCanvas;
     private CanvasGroup popupCanvasGroup;
 
     private void Start()
@@ -85,25 +87,18 @@ public class SaveManager : MonoBehaviour
 
             if (objectsContainer != null)
             {
-                foreach (Transform child in objectsContainer.transform)
-                {
-                    SaveObjectRecursively(child.gameObject, sceneData);
-                }
+                SaveObjectRecursively(objectsContainer, sceneData);
             }
             else
             {
                 Debug.LogWarning("'Objects'コンテナが見つかりません。");
             }
 
-            string json = JsonUtility.ToJson(sceneData);
+            string json = JsonUtility.ToJson(sceneData, true);
             string savePath = Path.Combine(Application.persistentDataPath, SAVE_FILE_NAME);
             File.WriteAllText(savePath, json);
 
-            Debug.Log("シーンが保存されました");
-            Debug.Log($"保存されたJSONデータ: {json}");
-            Debug.Log($"保存先: {savePath}");
-
-            // 保存が成功した場合にのみポップアップを表示
+            Debug.Log($"シーンが保存されました: {savePath}");
             ShowSaveCompletedPopup();
         }
         catch (System.Exception e)
@@ -115,7 +110,6 @@ public class SaveManager : MonoBehaviour
 
     private void SaveObjectRecursively(GameObject obj, SceneData sceneData, int parentIndex = -1)
     {
-        // フォルダオブジェクトをスキップ
         if (obj.name == "Items" || obj.name == "Shelves")
         {
             int currentIndex = parentIndex;
@@ -133,15 +127,16 @@ public class SaveManager : MonoBehaviour
         {
             ObjectData objData = new ObjectData
             {
-                prefabPath = prefabPath.Replace("Resources/", ""),
+                prefabPath = prefabPath,
                 position = new SerializableVector3(obj.transform.localPosition),
                 rotation = new SerializableQuaternion(obj.transform.localRotation),
                 scale = new SerializableVector3(obj.transform.localScale),
-                parentIndex = parentIndex
+                parentIndex = parentIndex,
+                texturePath = GetTexturePath(obj),
+                mtlPath = GetMtlPath(obj)
             };
             int currentIndex = sceneData.objects.Count;
             sceneData.objects.Add(objData);
-            // Debug.Log($"オブジェクト '{obj.name}' を保存: プレハブパス {objData.prefabPath}, 位置 {obj.transform.localPosition}, 回転 {obj.transform.localRotation.eulerAngles}, スケール {obj.transform.localScale}");
 
             foreach (Transform child in obj.transform)
             {
@@ -171,6 +166,18 @@ public class SaveManager : MonoBehaviour
         }
     }
 
+    private string GetTexturePath(GameObject obj)
+    {
+        string objName = obj.name.Replace("(Clone)", "");
+        return objName;
+    }
+
+    private string GetMtlPath(GameObject obj)
+    {
+        string objName = obj.name.Replace("(Clone)", "");
+        return objName;
+    }
+
     public void LoadScene()
     {
         // 既存のオブジェクトをクリア
@@ -193,26 +200,14 @@ public class SaveManager : MonoBehaviour
         string json = File.ReadAllText(savePath);
         SceneData sceneData = JsonUtility.FromJson<SceneData>(json);
 
-        // 既存のItems, Shelvesフォルダを取得または作成
-        GameObject itemsFolder = existingObjects.transform.Find("Items")?.gameObject;
-        if (itemsFolder == null)
-        {
-            itemsFolder = new GameObject("Items");
-            itemsFolder.transform.SetParent(existingObjects.transform);
-        }
-
-        GameObject shelvesFolder = existingObjects.transform.Find("Shelves")?.gameObject;
-        if (shelvesFolder == null)
-        {
-            shelvesFolder = new GameObject("Shelves");
-            shelvesFolder.transform.SetParent(existingObjects.transform);
-        }
+        GameObject itemsFolder = GetOrCreateFolder(existingObjects, "Items");
+        GameObject shelvesFolder = GetOrCreateFolder(existingObjects, "Shelves");
 
         List<GameObject> instantiatedObjects = new List<GameObject>();
 
         foreach (ObjectData objData in sceneData.objects)
         {
-            GameObject prefab = Resources.Load<GameObject>(objData.prefabPath.Replace("Resources/", ""));
+            GameObject prefab = Resources.Load<GameObject>(objData.prefabPath);
             if (prefab != null)
             {
                 GameObject newObj = Instantiate(prefab);
@@ -224,7 +219,6 @@ public class SaveManager : MonoBehaviour
                 // レイヤーをDefaultに設定
                 newObj.layer = LayerMask.NameToLayer("Default");
 
-                // タグを付与
                 if (objData.prefabPath.StartsWith("Items/"))
                 {
                     newObj.tag = "Item";
@@ -241,12 +235,8 @@ public class SaveManager : MonoBehaviour
                     newObj.transform.SetParent(existingObjects.transform);
                 }
 
-                // オブジェクトの詳細情報をログ出力
-                // Debug.Log($"生成されたオブジェクト: {newObj.name}, タグ: {newObj.tag}, レイヤー: {LayerMask.LayerToName(newObj.layer)}");
-                // Debug.Log($"位置: {newObj.transform.position}, 回転: {newObj.transform.rotation.eulerAngles}, スケール: {newObj.transform.localScale}");
-                // Debug.Log($"コンポーネント: {string.Join(", ", newObj.GetComponents<Component>().Select(c => c.GetType().Name))}");
+                ApplyTextureAndMaterialToObject(newObj, objData.texturePath, objData.mtlPath);
 
-                // Colliderがな場合追加
                 if (newObj.GetComponent<Collider>() == null)
                 {
                     newObj.AddComponent<BoxCollider>();
@@ -273,14 +263,6 @@ public class SaveManager : MonoBehaviour
                     {
                         instantiatedObjects[i].transform.SetParent(parentObject.transform);
                     }
-                    else
-                    {
-                        Debug.LogWarning($"親オブジェクトが見つかりません。インデックス: {sceneData.objects[i].parentIndex}。現在の親を維持します。");
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning($"無効な親インデックス: {sceneData.objects[i].parentIndex}。現在の親を維持します。");
                 }
             }
         }
@@ -288,11 +270,89 @@ public class SaveManager : MonoBehaviour
         Debug.Log("シーンを読み込みました。");
     }
 
-    private IEnumerator AddPhysicsToLoadedObjectsDelayed()
+    private GameObject GetOrCreateFolder(GameObject parent, string folderName)
     {
-        // 1フレーム待機して、オブジェクトの生成が確実に完了すのを待つ
-        yield return null;
+        Transform folderTransform = parent.transform.Find(folderName);
+        if (folderTransform == null)
+        {
+            GameObject folder = new GameObject(folderName);
+            folder.transform.SetParent(parent.transform);
+            return folder;
+        }
+        return folderTransform.gameObject;
+    }
 
+    private void ApplyTextureAndMaterialToObject(GameObject obj, string texturePath, string mtlPath)
+    {
+        Renderer renderer = obj.GetComponent<Renderer>();
+        if (renderer != null)
+        {
+            // マテリアルを適用
+            Material material = Resources.Load<Material>(mtlPath);
+            if (material != null)
+            {
+                renderer.material = new Material(material);
+            }
+            else
+            {
+                Debug.LogWarning($".mtlファイルが見つかりません: {mtlPath}");
+            }
+
+            // テクスチャを適用
+            Texture2D texture = Resources.Load<Texture2D>(texturePath);
+            if (texture != null)
+            {
+                renderer.material.mainTexture = texture;
+            }
+            else
+            {
+                Debug.LogWarning($"テクスチャが見つかりません: {texturePath}");
+            }
+        }
+    }
+
+    private void ShowSaveCompletedPopup()
+    {
+        saveCompletedPopup.SetActive(true);
+        StartCoroutine(FadeInOutPopup());
+    }
+
+    private System.Collections.IEnumerator FadeInOutPopup()
+    {
+        // フェードインとフェードアウトの処理
+        float duration = 0.5f;
+        float time = 0;
+        while (time < duration)
+        {
+            popupCanvasGroup.alpha = Mathf.Lerp(0, 1, time / duration);
+            time += Time.deltaTime;
+        // 1フレーム待機して、オブジェクトの生成が確実に完了すのを待つ
+            yield return null;
+        }
+        popupCanvasGroup.alpha = 1;
+
+        // 表示時間
+        yield return new WaitForSeconds(2f);
+
+        // フェードアウト
+        time = 0;
+        while (time < duration)
+        {
+            popupCanvasGroup.alpha = Mathf.Lerp(1, 0, time / duration);
+            time += Time.deltaTime;
+            yield return null;
+        }
+        popupCanvasGroup.alpha = 0;
+
+        saveCompletedPopup.SetActive(false);
+        yield break;
+    }
+
+    private IEnumerator AddPhysicsToLoadedObjectsDelayed()
+        // 現在のシーン名を取得
+    {
+        yield return null;
+        // Warehouseシーンでない場合のみSaveManagerを生成
         AddPhysicsToLoadedObjects();
     }
 
@@ -314,10 +374,8 @@ public class SaveManager : MonoBehaviour
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void OnAfterSceneLoadRuntimeMethod()
     {
-        // 現在のシーン名を取得
         string currentSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
-        // Warehouseシーンでない場合のみSaveManagerを生成
         if (currentSceneName != "Warehouse")
         {
             SaveManager saveManager = FindObjectOfType<SaveManager>();
@@ -329,45 +387,4 @@ public class SaveManager : MonoBehaviour
             saveManager.LoadScene();
         }
     }
-
-    private void ShowSaveCompletedPopup()
-    {
-        saveCompletedPopup.SetActive(true);
-        StartCoroutine(FadeInOutPopup());
-    }
-
-    private IEnumerator FadeInOutPopup()
-    {
-        // フェードイン
-        float duration = 0.5f;
-        float time = 0;
-        while (time < duration)
-        {
-            popupCanvasGroup.alpha = Mathf.Lerp(0, 1, time / duration);
-            time += Time.deltaTime;
-            yield return null;
-        }
-        popupCanvasGroup.alpha = 1;
-
-        // 表示時間
-        yield return new WaitForSeconds(2f);
-
-        // フェードアウト
-        time = 0;
-        while (time < duration)
-        {
-            popupCanvasGroup.alpha = Mathf.Lerp(1, 0, time / duration);
-            time += Time.deltaTime;
-            yield return null;
-        }
-        popupCanvasGroup.alpha = 0;
-
-        saveCompletedPopup.SetActive(false);
-    }
-
-    // Startメソッドを削除または無効化
-    // private void Start()
-    // {
-    //     LoadScene();
-    // }
 }
