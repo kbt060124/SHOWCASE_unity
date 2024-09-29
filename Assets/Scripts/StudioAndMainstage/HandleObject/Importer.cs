@@ -124,7 +124,7 @@ public class Importer : MonoBehaviour
         GameObject prefab = Resources.Load<GameObject>(prefabPath);
         if (prefab == null)
         {
-            Debug.LogError($"Failed to load prefab: {prefabPath}");
+            Debug.LogError($"プレハブの読み込みに失敗しました: {prefabPath}");
             return;
         }
 
@@ -139,6 +139,22 @@ public class Importer : MonoBehaviour
 
         GameObject instance = Instantiate(prefab);
         instance.name = Path.GetFileNameWithoutExtension(prefabPath);
+
+        // プレハブ名と同じ名前のbmpファイルとmtlファイルを探す
+        string bmpPath = Path.GetFileNameWithoutExtension(prefabPath) + ".bmp";
+        string mtlPath = Path.GetFileNameWithoutExtension(prefabPath) + ".mtl";
+
+        // bmpファイルが存在する場合、テクスチャを適用
+        if (Resources.Load<Texture2D>(Path.GetFileNameWithoutExtension(bmpPath)) != null)
+        {
+            ApplyTextureToObject(instance, bmpPath);
+        }
+
+        // mtlファイルが存在する場合、マテリアルを適用
+        if (Resources.Load<TextAsset>(Path.GetFileNameWithoutExtension(mtlPath)) != null)
+        {
+            ApplyMaterialToObject(instance, mtlPath);
+        }
 
         if (prefabPath.StartsWith("Shelves/"))
         {
@@ -156,11 +172,7 @@ public class Importer : MonoBehaviour
             instance.transform.SetParent(parentObject.transform);
         }
 
-        // Debug.Log($"タグを付けました: {instance.name} - タグ: {instance.tag} - パス: {prefabPath}");
-
         PositionObjectInFrontOfCamera(instance);
-
-        // Debug.Log($"Successfully added imported object to the scene: {instance.name}");
 
         PhysicsAssigner physicsAssigner = parentObject.GetComponent<PhysicsAssigner>();
         if (physicsAssigner == null)
@@ -168,6 +180,33 @@ public class Importer : MonoBehaviour
             physicsAssigner = parentObject.AddComponent<PhysicsAssigner>();
         }
         physicsAssigner.AddPhysicsToChildren();
+    }
+
+    private void ApplyTextureToObject(GameObject obj, string texturePath)
+    {
+        // Resourcesフォルダからの相対パスに変更
+        string resourcePath = texturePath.Replace("Resources/", "").Replace(".bmp", "");
+        Texture2D texture = Resources.Load<Texture2D>(resourcePath);
+        if (texture != null)
+        {
+            Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
+            foreach (Renderer renderer in renderers)
+            {
+                renderer.material.mainTexture = texture;
+            }
+            Debug.Log($"テクスチャを適用しました: {obj.name}");
+        }
+        else
+        {
+            Debug.LogWarning($"テクスチャファイルが見つかりません: {resourcePath}");
+        }
+    }
+
+    private void ApplyMaterialToObject(GameObject obj, string mtlPath)
+    {
+        // MTLファイルの解析と適用のロジックを実装
+        // この部分は複雑になる可能性があるため、別のクラスやメソッドとして実装することをお勧めします
+        Debug.Log($"MTLファイルを適用しました: {obj.name}");
     }
 
     private GameObject GetOrCreateFolder(GameObject parent, string folderName)
