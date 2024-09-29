@@ -81,3 +81,8 @@ crashlytics-build.properties
 # Node.js関連ファイル
 package-lock.json
 package.json
+
+# 指定されたフォルダを無視
+/Assets/Items/
+/Assets/Shelves/
+/Assets/Resources/
