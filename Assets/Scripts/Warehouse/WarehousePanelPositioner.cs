@@ -34,7 +34,7 @@ public class WarehousePanelPositioner : MonoBehaviour
 
         panelRectTransform.anchorMin = new Vector2(0, 0);
         panelRectTransform.anchorMax = new Vector2(1f/3f, 1);
-        panelRectTransform.anchoredPosition = new Vector2(0, -150);
+        panelRectTransform.anchoredPosition = new Vector2(100, -150);
         panelRectTransform.sizeDelta = new Vector2(0, -150);
 
         RectTransform warehouseRectTransform = panelRectTransform.parent as RectTransform;
@@ -73,7 +73,7 @@ public class WarehousePanelPositioner : MonoBehaviour
         }
 
         thumbnailsGridLayoutGroup.cellSize = new Vector2(80, 80);
-        thumbnailsGridLayoutGroup.spacing = new Vector2(40, 10);
+        thumbnailsGridLayoutGroup.spacing = new Vector2(40, 40);
         thumbnailsGridLayoutGroup.startCorner = GridLayoutGroup.Corner.UpperLeft;
         thumbnailsGridLayoutGroup.startAxis = GridLayoutGroup.Axis.Horizontal;
         thumbnailsGridLayoutGroup.childAlignment = TextAnchor.UpperLeft;
