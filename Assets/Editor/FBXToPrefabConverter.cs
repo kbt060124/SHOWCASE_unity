@@ -40,16 +40,22 @@ public class FBXToPrefabConverter : EditorWindow
         foreach (string subFolder in subFolders)
         {
             string[] fbxFiles = Directory.GetFiles(subFolder, "*.fbx", SearchOption.TopDirectoryOnly);
+            string folderName = new DirectoryInfo(subFolder).Name;
+
+            // フォルダ名が数字であることを確認
+            if (!int.TryParse(folderName, out _))
+            {
+                Debug.LogWarning($"数字以外の名前のフォルダをスキップします: {subFolder}");
+                continue;
+            }
 
             foreach (string fbxFile in fbxFiles)
             {
-                string fileName = Path.GetFileNameWithoutExtension(fbxFile);
                 string relativeFbxPath = fbxFile.Replace(Application.dataPath, "Assets");
                 string relativeSourceFolder = sourceFolder.Replace(Application.dataPath, "Assets");
-                string subFolderName = new DirectoryInfo(subFolder).Name;
 
-                string prefabFolder = Path.Combine(destinationFolder, relativeSourceFolder.Substring(7), subFolderName);
-                string prefabPath = Path.Combine(prefabFolder, fileName + ".prefab");
+                string prefabFolder = Path.Combine(destinationFolder, relativeSourceFolder.Substring(7));
+                string prefabPath = Path.Combine(prefabFolder, folderName + ".prefab");
 
                 // フォルダが存在しない場合は作成
                 if (!Directory.Exists(prefabFolder))
@@ -64,26 +70,19 @@ public class FBXToPrefabConverter : EditorWindow
                 GameObject fbxObject = AssetDatabase.LoadAssetAtPath<GameObject>(relativeFbxPath);
                 if (fbxObject == null)
                 {
-                    Debug.LogError($"Failed to load FBX: {relativeFbxPath}");
+                    Debug.LogError($"FBXの読み込みに失敗しました: {relativeFbxPath}");
                     continue;
                 }
 
                 // プレハブを作成または更新
-                GameObject existingPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-                if (existingPrefab != null)
+                GameObject prefabObject = PrefabUtility.SaveAsPrefabAsset(fbxObject, prefabPath);
+                if (prefabObject == null)
                 {
-                    PrefabUtility.SaveAsPrefabAssetAndConnect(fbxObject, prefabPath, InteractionMode.AutomatedAction);
-                    // Debug.Log($"Updated prefab: {prefabPath}");
+                    Debug.LogError($"プレハブの作成に失敗しました: {prefabPath}");
                 }
                 else
                 {
-                    GameObject prefabObject = PrefabUtility.SaveAsPrefabAsset(fbxObject, prefabPath);
-                    if (prefabObject == null)
-                    {
-                        Debug.LogError($"Failed to create prefab: {prefabPath}");
-                        continue;
-                    }
-                    // Debug.Log($"Created prefab: {prefabPath}");
+                    Debug.Log($"プレハブを作成または更新しました: {prefabPath}");
                 }
             }
         }
