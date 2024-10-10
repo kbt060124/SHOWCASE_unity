@@ -83,8 +83,24 @@ public class FBXToPrefabConverter : EditorWindow
                 else
                 {
                     Debug.Log($"プレハブを作成または更新しました: {prefabPath}");
+
+                    // 同じ名前のjpgまたはpngファイルを探してコピー
+                    string[] imageExtensions = { ".jpg", ".png" };
+                    foreach (string ext in imageExtensions)
+                    {
+                        string sourceImagePath = Path.Combine(subFolder, folderName + ext);
+                        if (File.Exists(sourceImagePath))
+                        {
+                            string destImagePath = Path.Combine(prefabFolder, folderName + ext);
+                            File.Copy(sourceImagePath, destImagePath, true);
+                            Debug.Log($"画像ファイルをコピーしました: {destImagePath}");
+                            break; // 最初に見つかった画像ファイルのみをコピー
+                        }
+                    }
                 }
             }
         }
+
+        AssetDatabase.Refresh();
     }
 }

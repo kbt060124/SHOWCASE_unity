@@ -1,11 +1,13 @@
 using UnityEngine;
-using System.IO;
+using UnityEngine.UI;
+using System.Collections;
 using System.Linq;
 
 public class WarehouseImporter : MonoBehaviour
 {
     [SerializeField] private WarehouseObjectRotator objectRotator;
     [SerializeField] private ItemPanel itemPanel;
+    [SerializeField] private ScrollRect thumbnailScrollView;
 
     private string selectedThumbnailPath;
 
@@ -24,6 +26,70 @@ public class WarehouseImporter : MonoBehaviour
                 Debug.LogError("ItemPanelが見つかりません。シーンにItemPanelを追加してください。");
             }
         }
+
+        StartCoroutine(LoadThumbnailsAsync());
+    }
+
+    private IEnumerator LoadThumbnailsAsync()
+    {
+        string[] categories = { "Items", "Shelves" };
+        foreach (string category in categories)
+        {
+            yield return LoadCategoryThumbnailsAsync(category);
+        }
+    }
+
+    private IEnumerator LoadCategoryThumbnailsAsync(string category)
+    {
+        string[] assetPaths = Resources.LoadAll<Texture2D>(category)
+            .Where(t => IsThumbnail(t.name))
+            .Select(t => $"{category}/{t.name}")
+            .ToArray();
+
+        foreach (string assetPath in assetPaths)
+        {
+            yield return CreateThumbnailButtonAsync(assetPath);
+        }
+    }
+
+    private bool IsThumbnail(string name)
+    {
+        return System.Text.RegularExpressions.Regex.IsMatch(name, @"^\d+\.png$");
+    }
+
+    private IEnumerator CreateThumbnailButtonAsync(string assetPath)
+    {
+        ResourceRequest request = Resources.LoadAsync<Texture2D>(assetPath);
+        yield return request;
+
+        Texture2D thumbnail = request.asset as Texture2D;
+        if (thumbnail == null)
+        {
+            Debug.LogError($"サムネイルの読み込みに失敗しました: {assetPath}");
+            yield break;
+        }
+
+        GameObject buttonObj = new GameObject("ThumbnailButton");
+        buttonObj.transform.SetParent(thumbnailScrollView.content, false);
+
+        RectTransform rectTransform = buttonObj.AddComponent<RectTransform>();
+        rectTransform.sizeDelta = new Vector2(100, 100); // サムネイルのサイズを調整
+
+        Image thumbnailImage = buttonObj.AddComponent<Image>();
+        thumbnailImage.sprite = Sprite.Create(thumbnail, new Rect(0, 0, thumbnail.width, thumbnail.height), Vector2.zero);
+
+        Button button = buttonObj.AddComponent<Button>();
+        button.targetGraphic = thumbnailImage;
+        string prefabName = System.IO.Path.GetFileNameWithoutExtension(assetPath);
+        string category = assetPath.Split('/')[0];
+        button.onClick.AddListener(() => OnThumbnailClicked($"{category}/{prefabName}"));
+
+        Resources.UnloadAsset(thumbnail);
+    }
+
+    private void OnThumbnailClicked(string path)
+    {
+        ImportScene(path);
     }
 
     public void ImportScene(string thumbnailPath)
@@ -57,40 +123,33 @@ public class WarehouseImporter : MonoBehaviour
         // カテゴリフォルダを取得または作成
         GameObject categoryFolder = GetOrCreateFolder(parentObject, category);
 
-        // フォルダ内のすべてのアセットを取得
-        UnityEngine.Object[] assets = Resources.LoadAll($"{category}/{folderName}");
-        Debug.Log($"Loaded assets count: {assets.Length}");
-        
-        // プレハブを見つける
-        GameObject prefab = null;
-        foreach (UnityEngine.Object asset in assets)
-        {
-            GameObject go = asset as GameObject;
-            if (go != null && IsPrefabLike(go))
-            {
-                prefab = go;
-                Debug.Log($"Found prefab: {go.name}");
-                break;
-            }
-        }
+        // プレハブを非同期で読み込む
+        StartCoroutine(LoadPrefabAsync(category, folderName, categoryFolder));
+    }
 
+    private IEnumerator LoadPrefabAsync(string category, string prefabName, GameObject categoryFolder)
+    {
+        ResourceRequest request = Resources.LoadAsync<GameObject>($"{category}/{prefabName}");
+        yield return request;
+
+        GameObject prefab = request.asset as GameObject;
         if (prefab == null)
         {
-            Debug.LogError($"プレハブが見つかりません: {category}/{folderName}");
-            return;
+            Debug.LogError($"プレハブが見つかりません: {category}/{prefabName}");
+            yield break;
         }
 
         GameObject instance = Instantiate(prefab, categoryFolder.transform);
         instance.name = prefab.name;
         instance.tag = category == "Shelves" ? "Shelf" : "Item";
 
-        Debug.Log($"タグを付けました: {instance.name} - タグ: {instance.tag} - パス: {category}/{folderName}/{prefab.name}");
+        Debug.Log($"タグを付けました: {instance.name} - タグ: {instance.tag} - パス: {category}/{prefabName}");
 
-        SetupImportedObject(instance, prefab.name, folderName);
+        SetupImportedObject(instance, prefab.name, prefabName);
 
         UpdateItemPanelThumbnail();
 
-        ObjectInfo objectInfo = ObjectInfoManager.GetObjectInfoByFolderName(folderName);
+        ObjectInfo objectInfo = ObjectInfoManager.GetObjectInfoByFolderName(prefabName);
         if (objectInfo != null)
         {
             UpdateItemPanel(objectInfo);
@@ -99,6 +158,8 @@ public class WarehouseImporter : MonoBehaviour
         {
             UpdateItemPanel(null);
         }
+
+        Resources.UnloadAsset(prefab);
     }
 
     private void ClearCategoryFolder(GameObject parent, string categoryName)

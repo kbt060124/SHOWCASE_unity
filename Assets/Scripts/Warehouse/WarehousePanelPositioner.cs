@@ -72,7 +72,7 @@ public class WarehousePanelPositioner : MonoBehaviour
             return;
         }
 
-        thumbnailsGridLayoutGroup.cellSize = new Vector2(80, 80);
+        thumbnailsGridLayoutGroup.cellSize = new Vector2(120, 120);
         thumbnailsGridLayoutGroup.spacing = new Vector2(40, 40);
         thumbnailsGridLayoutGroup.startCorner = GridLayoutGroup.Corner.UpperLeft;
         thumbnailsGridLayoutGroup.startAxis = GridLayoutGroup.Axis.Horizontal;
