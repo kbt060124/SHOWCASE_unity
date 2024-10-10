@@ -76,10 +76,10 @@ public class PanelPositioner : MonoBehaviour
         }
 
         // グリッドのセルサイズを設定
-        thumbnailsGridLayoutGroup.cellSize = new Vector2(80, 80); // サムネイルのサイズに応じて調整
+        thumbnailsGridLayoutGroup.cellSize = new Vector2(120, 120); // サムネイルのサイズに応じて調整
 
         // グリッドの間隔を設定
-        thumbnailsGridLayoutGroup.spacing = new Vector2(40, 10);
+        thumbnailsGridLayoutGroup.spacing = new Vector2(40, 20);
 
         // グリッドの開始位置を設定
         thumbnailsGridLayoutGroup.startCorner = GridLayoutGroup.Corner.UpperLeft;

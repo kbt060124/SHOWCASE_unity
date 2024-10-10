@@ -13,7 +13,7 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: DefaultCompany
-  productName: FBXImport
+  productName: SHOWCASE
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -162,7 +162,7 @@ PlayerSettings:
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
     Standalone: com.DefaultCompany.FBXImport
-    iPhone: com.DefaultCompany.FBXImport
+    iPhone: com.DefaultCompany.SHOWCASE
   buildNumber:
     Standalone: 0
     VisionOS: 0
@@ -185,7 +185,7 @@ PlayerSettings:
   StripUnusedMeshComponents: 1
   strictShaderVariantMatching: 0
   VertexChannelCompressionMask: 4054
-  iPhoneSdkVersion: 989
+  iPhoneSdkVersion: 988
   iOSTargetOSVersionString: 12.0
   tvOSSdkVersion: 0
   tvOSRequireExtendedGameController: 0
@@ -853,11 +853,11 @@ PlayerSettings:
   apiCompatibilityLevel: 6
   activeInputHandler: 0
   windowsGamepadBackendHint: 0
-  cloudProjectId: 0535756e-5e0e-4fa5-9a5a-6e4c9f62007b
+  cloudProjectId: 0603ba97-68d4-4ed7-85dd-51452b317117
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: FBXImport
-  organizationId: kbt060124
+  projectName: SHOWCASE
+  organizationId: kaho_t
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
   hmiLoadingImage: {fileID: 0}
