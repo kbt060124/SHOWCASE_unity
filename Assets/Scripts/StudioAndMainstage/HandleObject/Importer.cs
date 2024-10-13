@@ -240,6 +240,10 @@ public class Importer : MonoBehaviour
         {
             scaleFactor *= 0.5f;
         }
+        if (obj.CompareTag("Shelf"))
+        {
+            scaleFactor *= 0.5f;
+        }
 
         obj.transform.localScale = originalScale * scaleFactor;
 
