@@ -1163,7 +1163,7 @@ MonoBehaviour:
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 0
-  m_Spacing: 0
+  m_Spacing: 32
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 1
   m_ChildControlWidth: 0
@@ -2919,7 +2919,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 8049c4f7108e74a578d0260524e22583, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 0221b76c0bf3942ff9f2f5219dbeef76, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -4437,26 +4437,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   room: {fileID: 1820973428}
-  changePresetButton: {fileID: 0}
+  changePresetButton: {fileID: 863760118}
   presets:
-  - wallRightMaterial: {fileID: 0}
-    wallLeftMaterial: {fileID: 0}
-    wallBackMaterial: {fileID: 0}
-    wallFrontMaterial: {fileID: 0}
-    ceilingMaterial: {fileID: 0}
-    floorMaterial: {fileID: 0}
-  - wallRightMaterial: {fileID: 0}
-    wallLeftMaterial: {fileID: 0}
-    wallBackMaterial: {fileID: 0}
-    wallFrontMaterial: {fileID: 0}
-    ceilingMaterial: {fileID: 0}
-    floorMaterial: {fileID: 0}
-  - wallRightMaterial: {fileID: 0}
-    wallLeftMaterial: {fileID: 0}
-    wallBackMaterial: {fileID: 0}
-    wallFrontMaterial: {fileID: 0}
-    ceilingMaterial: {fileID: 0}
-    floorMaterial: {fileID: 0}
+  - wallRightMaterial: {fileID: 2100000, guid: 88629d2c1a1bc48d49d87eb1b6b731f9, type: 2}
+    wallLeftMaterial: {fileID: 2100000, guid: 88629d2c1a1bc48d49d87eb1b6b731f9, type: 2}
+    wallBackMaterial: {fileID: 2100000, guid: 88629d2c1a1bc48d49d87eb1b6b731f9, type: 2}
+    wallFrontMaterial: {fileID: 2100000, guid: 88629d2c1a1bc48d49d87eb1b6b731f9, type: 2}
+    ceilingMaterial: {fileID: 2100000, guid: 88629d2c1a1bc48d49d87eb1b6b731f9, type: 2}
+    floorMaterial: {fileID: 2100000, guid: 9af34721d62dd804da5c720b8325b5d3, type: 2}
+  - wallRightMaterial: {fileID: 2100000, guid: 6b6280f089cf944b4afd7337660c063c, type: 2}
+    wallLeftMaterial: {fileID: 2100000, guid: 6b6280f089cf944b4afd7337660c063c, type: 2}
+    wallBackMaterial: {fileID: 2100000, guid: 6b6280f089cf944b4afd7337660c063c, type: 2}
+    wallFrontMaterial: {fileID: 2100000, guid: 6b6280f089cf944b4afd7337660c063c, type: 2}
+    ceilingMaterial: {fileID: 2100000, guid: b7e14578c4ed14ce991d179a1442e06d, type: 2}
+    floorMaterial: {fileID: 2100000, guid: 0c634d43759f96547a2894e2744199f1, type: 2}
+  - wallRightMaterial: {fileID: 2100000, guid: 12b847f4b72a2c34c8b908e75259796d, type: 2}
+    wallLeftMaterial: {fileID: 2100000, guid: 12b847f4b72a2c34c8b908e75259796d, type: 2}
+    wallBackMaterial: {fileID: 2100000, guid: 12b847f4b72a2c34c8b908e75259796d, type: 2}
+    wallFrontMaterial: {fileID: 2100000, guid: 12b847f4b72a2c34c8b908e75259796d, type: 2}
+    ceilingMaterial: {fileID: 2100000, guid: 88629d2c1a1bc48d49d87eb1b6b731f9, type: 2}
+    floorMaterial: {fileID: 2100000, guid: 55971b4a0b2864041bd631108f7c435e, type: 2}
 --- !u!1 &1402804736
 GameObject:
   m_ObjectHideFlags: 0
@@ -7413,7 +7413,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: e5d56e885226e594793bc057f227c0cd, type: 2}
+  - {fileID: 2100000, guid: 9af34721d62dd804da5c720b8325b5d3, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
