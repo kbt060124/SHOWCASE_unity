@@ -19,6 +19,9 @@ public class AxisDragAndDropHandler : ObjectSelector
     }
     private RoomBoundaries roomBoundaries;
 
+    private Vector3 roomMin;
+    private Vector3 roomMax;
+
     //------------------------------------------------
     // 初期化と設定
     //------------------------------------------------
@@ -27,6 +30,7 @@ public class AxisDragAndDropHandler : ObjectSelector
     {
         InitializeComponents();
         SetInitialMode();
+        CalculateRoomBounds();
     }
 
     private void InitializeComponents()
@@ -50,6 +54,41 @@ public class AxisDragAndDropHandler : ObjectSelector
     {
         OperationModeManager.Instance.SetMode(OperationModeManager.OperationMode.AxisDragAndDropXZ);
         Debug.Log("初期状態：XZ軸モードに設定しました");
+    }
+
+    private void CalculateRoomBounds()
+    {
+        if (roomBoundaries.Floor == null || roomBoundaries.Back == null || roomBoundaries.Front == null ||
+            roomBoundaries.Ceiling == null || roomBoundaries.Left == null || roomBoundaries.Right == null)
+        {
+            Debug.LogError("部屋の境界を計算できません。コンポーネントが不足しています。");
+            return;
+        }
+
+        // 壁の厚さを計算
+        float floorThickness = roomBoundaries.Floor.GetComponent<Renderer>().bounds.size.y;
+        float wallBackThickness = roomBoundaries.Back.GetComponent<Renderer>().bounds.size.z;
+        float wallFrontThickness = roomBoundaries.Front.GetComponent<Renderer>().bounds.size.z;
+        float ceilingThickness = roomBoundaries.Ceiling.GetComponent<Renderer>().bounds.size.y;
+        float wallLeftThickness = roomBoundaries.Left.GetComponent<Renderer>().bounds.size.x;
+        float wallRightThickness = roomBoundaries.Right.GetComponent<Renderer>().bounds.size.x;
+
+        // Y軸の余裕を設定（部屋の高さの10%とします）
+        float roomHeight = roomBoundaries.Ceiling.GetComponent<Renderer>().bounds.min.y - roomBoundaries.Floor.GetComponent<Renderer>().bounds.max.y;
+        float yAxisMargin = roomHeight * 0.15f;
+
+        // roomMinとroomMaxを計算
+        roomMin = new Vector3(
+            roomBoundaries.Left.GetComponent<Renderer>().bounds.max.x + wallLeftThickness,
+            roomBoundaries.Floor.GetComponent<Renderer>().bounds.max.y + floorThickness - yAxisMargin, // Y軸の下限
+            roomBoundaries.Front.GetComponent<Renderer>().bounds.max.z + wallFrontThickness
+        );
+
+        roomMax = new Vector3(
+            roomBoundaries.Right.GetComponent<Renderer>().bounds.min.x - wallRightThickness,
+            roomBoundaries.Ceiling.GetComponent<Renderer>().bounds.min.y - ceilingThickness, // Y軸の上限
+            roomBoundaries.Back.GetComponent<Renderer>().bounds.min.z - wallBackThickness
+        );
     }
 
     //------------------------------------------------
@@ -130,10 +169,8 @@ public class AxisDragAndDropHandler : ObjectSelector
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
                 Vector3 newPosition = CalculateNewPosition(ray, OperationModeManager.Instance.IsXYMode());
 
-                if (!IsColliding(newPosition))
-                {
-                    selectedObject.transform.position = newPosition;
-                }
+                // IsCollidingチェックを削除し、直接新しい位置を設定
+                selectedObject.transform.position = newPosition;
             }
         }
     }
@@ -144,7 +181,8 @@ public class AxisDragAndDropHandler : ObjectSelector
 
     private Vector3 CalculateNewPosition(Ray ray, bool isXYMode)
     {
-        return isXYMode ? CalculateXYPosition(ray) : CalculateXZPosition(ray);
+        Vector3 newPosition = isXYMode ? CalculateXYPosition(ray) : CalculateXZPosition(ray);
+        return ClampPositionToRoom(newPosition);
     }
 
     private Vector3 CalculateXYPosition(Ray ray)
@@ -164,7 +202,7 @@ public class AxisDragAndDropHandler : ObjectSelector
 
     private Vector3 CalculateXZPosition(Ray ray)
     {
-        // オブジェクトの現在のY座標を使用してxzPlaneを作成
+        // オブジェクトの現在のY座標を使用してxzPlaneを作る
         Plane objectXZPlane = new Plane(Vector3.up, new Vector3(0, selectedObject.transform.position.y, 0));
 
         if (objectXZPlane.Raycast(ray, out float distance))
@@ -175,74 +213,12 @@ public class AxisDragAndDropHandler : ObjectSelector
         return selectedObject.transform.position;
     }
 
-    //------------------------------------------------
-    // 衝突判定
-    //------------------------------------------------
-
-    private bool IsColliding(Vector3 newPosition)
+    private Vector3 ClampPositionToRoom(Vector3 position)
     {
-        if (canvasManager != null && canvasManager.isMainstageActive) return false;
-        if (selectedObject == null) return false;
-
-        Bounds objectBounds = GetObjectBounds(selectedObject, newPosition);
-
-        if (IsCollidingWithWalls(objectBounds)) return true;
-        if (IsCollidingWithFloor(objectBounds, newPosition)) return false;
-        if (IsCollidingWithOtherObjects(objectBounds)) return true;
-
-        return false;
-    }
-
-    private bool IsCollidingWithWalls(Bounds objectBounds)
-    {
-        return  (roomBoundaries.Right != null && objectBounds.max.x > roomBoundaries.Right.transform.position.x) ||
-                (roomBoundaries.Left != null && objectBounds.min.x < roomBoundaries.Left.transform.position.x) ||
-                (roomBoundaries.Back != null && objectBounds.max.z > roomBoundaries.Back.transform.position.z) ||
-                (roomBoundaries.Front != null && objectBounds.min.z < roomBoundaries.Front.transform.position.z) ||
-                (roomBoundaries.Ceiling != null && objectBounds.max.y > roomBoundaries.Ceiling.transform.position.y);
-    }
-
-    private bool IsCollidingWithFloor(Bounds objectBounds, Vector3 newPosition)
-    {
-        if (roomBoundaries.Floor != null)
-        {
-            float floorY = roomBoundaries.Floor.transform.position.y;
-            if (objectBounds.min.y < floorY)
-            {
-                float adjustment = floorY - objectBounds.min.y;
-                selectedObject.transform.position = new Vector3(newPosition.x, newPosition.y + adjustment, newPosition.z);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private bool IsCollidingWithOtherObjects(Bounds objectBounds)
-    {
-        Collider[] hitColliders = Physics.OverlapBox(objectBounds.center, objectBounds.extents, Quaternion.identity);
-        foreach (Collider hitCollider in hitColliders)
-        {
-            if (hitCollider.gameObject != selectedObject && hitCollider.gameObject != roomBoundaries.Floor)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private Bounds GetObjectBounds(GameObject obj, Vector3 position)
-    {
-        Bounds bounds = new Bounds(position, Vector3.zero);
-        Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
-
-        foreach (Renderer renderer in renderers)
-        {
-            bounds.Encapsulate(renderer.bounds);
-        }
-
-        Vector3 offset = position - obj.transform.position;
-        bounds.center += offset;
-
-        return bounds;
+        return new Vector3(
+            Mathf.Clamp(position.x, roomMin.x, roomMax.x),
+            Mathf.Clamp(position.y, roomMin.y, roomMax.y),
+            Mathf.Clamp(position.z, roomMin.z, roomMax.z)
+        );
     }
 }
