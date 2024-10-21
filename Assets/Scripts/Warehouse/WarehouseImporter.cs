@@ -6,6 +6,7 @@ using System.Linq;
 public class WarehouseImporter : MonoBehaviour
 {
     [SerializeField] private WarehouseObjectRotator objectRotator;
+    [SerializeField] private WarehouseObjectResizer objectResizer;
     [SerializeField] private ItemPanel itemPanel;
     [SerializeField] private ScrollRect thumbnailScrollView;
 
@@ -160,6 +161,16 @@ public class WarehouseImporter : MonoBehaviour
         }
 
         Resources.UnloadAsset(prefab);
+
+        if (objectResizer != null)
+        {
+            objectResizer.SetTargetObject(instance);
+            Debug.Log($"WarehouseObjectResizer: SetTargetObject called for {instance.name}");
+        }
+        else
+        {
+            Debug.LogError("WarehouseObjectResizer is not set in WarehouseImporter");
+        }
     }
 
     private void ClearCategoryFolder(GameObject parent, string categoryName)
