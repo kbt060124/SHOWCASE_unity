@@ -197,7 +197,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -40, y: 0}
+  m_AnchoredPosition: {x: -40, y: -108}
   m_SizeDelta: {x: 120, y: 0}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &121736789
@@ -401,7 +401,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 261.33334, y: -195}
+  m_AnchoredPosition: {x: 261.33334, y: -237.31409}
   m_SizeDelta: {x: 362.6667, y: 68}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &206673753
@@ -1142,7 +1142,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 40, y: 0}
+  m_AnchoredPosition: {x: 140, y: -108}
   m_SizeDelta: {x: 160, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &376600934
@@ -1218,6 +1218,7 @@ MonoBehaviour:
   sideMenuPanel: {fileID: 363435819}
   openButton: {fileID: 479035881}
   closeButton: {fileID: 619571712}
+  presetButton: {fileID: 0}
 --- !u!1 &463643995
 GameObject:
   m_ObjectHideFlags: 0
@@ -1325,6 +1326,7 @@ MonoBehaviour:
   sideMenuPanel: {fileID: 1486296119}
   openButton: {fileID: 1717459882}
   closeButton: {fileID: 1143503705}
+  presetButton: {fileID: 863760116}
 --- !u!1 &479035881
 GameObject:
   m_ObjectHideFlags: 0
@@ -2220,7 +2222,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 261.33334, y: -975}
+  m_AnchoredPosition: {x: 261.33334, y: -1186.5704}
   m_SizeDelta: {x: 362.6667, y: 68}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &700862011
@@ -2681,7 +2683,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 228.67796, y: -585}
+  m_AnchoredPosition: {x: 228.67796, y: -711.94226}
   m_SizeDelta: {x: 297.35593, y: 68}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &859328570
@@ -3987,12 +3989,12 @@ MonoBehaviour:
   m_Padding:
     m_Left: 80
     m_Right: 0
-    m_Top: 0
+    m_Top: 140
     m_Bottom: 0
-  m_ChildAlignment: 3
-  m_Spacing: 0
+  m_ChildAlignment: 0
+  m_Spacing: 60
   m_ChildForceExpandWidth: 1
-  m_ChildForceExpandHeight: 1
+  m_ChildForceExpandHeight: 0
   m_ChildControlWidth: 0
   m_ChildControlHeight: 0
   m_ChildScaleWidth: 0
@@ -4026,7 +4028,7 @@ RectTransform:
   m_GameObject: {fileID: 1143503705}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1486296120}
