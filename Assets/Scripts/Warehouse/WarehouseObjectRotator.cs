@@ -7,6 +7,7 @@ public class WarehouseObjectRotator : MonoBehaviour
     private float rotationSpeed = 0.5f;
     private Camera mainCamera;
     private Vector3 objectCenter;
+    public bool IsResizing { get; set; }
 
     private void Start()
     {
@@ -22,7 +23,7 @@ public class WarehouseObjectRotator : MonoBehaviour
 
     void Update()
     {
-        if (targetObject == null || mainCamera == null) return;
+        if (targetObject == null || mainCamera == null || IsResizing) return;
 
         if (Input.GetMouseButtonDown(0))
         {

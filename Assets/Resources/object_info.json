@@ -1,34 +1,89 @@
 {
   "objects": {
     "1": {
-      "name": "バスケットボール",
+      "name": "初音ミク①",
       "category": "アイテム",
-      "memo": "これはバスケットボールのメモです。"
+      "memo": "シナモロールちゃん"
     },
     "2": {
-      "name": "赤い車",
+      "name": "初音ミク②",
       "category": "アイテム",
-      "memo": "これは赤い車のメモです。"
+      "memo": ""
     },
     "3": {
-      "name": "スニーカー",
+      "name": "初音ミク③",
       "category": "アイテム",
-      "memo": "これはスニーカーのメモです。"
-    },
-    "4": {
-      "name": "棚",
-      "category": "棚",
-      "memo": "これは棚のメモです。"
+      "memo": "ステージ"
     },
     "5": {
-      "name": "Zebra",
+      "name": "キン肉マンゼブラ",
       "category": "アイテム",
-      "memo": "これはZebraのメモです。"
+      "memo": ""
     },
     "6": {
-      "name": "Hands",
+      "name": "アシュラマン",
       "category": "アイテム",
-      "memo": "これはHandsのメモです。"
+      "memo": ""
+    },
+    "7": {
+      "name": "宇宙飛行士",
+      "category": "アイテム",
+      "memo": "NASA"
+    },
+    "8": {
+      "name": "ゴジラ",
+      "category": "アイテム",
+      "memo": ""
+    },
+    "9": {
+      "name": "王蟲",
+      "category": "アイテム",
+      "memo": "風の谷のナウシカ"
+    },
+    "11": {
+      "name": "仮面ライダーフォーゼ",
+      "category": "アイテム",
+      "memo": ""
+    },
+    "12": {
+      "name": "ルフィー",
+      "category": "アイテム",
+      "memo": "ギアフィフス"
+    },
+    "13": {
+      "name": "しんかい",
+      "category": "アイテム",
+      "memo": ""
+    },
+    "14": {
+      "name": "ガンダム",
+      "category": "アイテム",
+      "memo": ""
+    },
+    "15": {
+      "name": "シールド",
+      "category": "アイテム",
+      "memo": ""
+    },
+    "16": {
+      "name": "ガン（大）",
+      "category": "アイテム",
+      "memo": ""
+    },
+    "95": {
+      "name": "Shop Display White Large",
+      "category": "棚",
+      "memo": ""
+    },
+    "96": {
+      "name": "Museum Display White Single",
+      "category": "棚",
+      "memo": ""
+    },
+    "97": {
+      "name": "Museum Display White Large",
+      "category": "棚",
+      "memo": ""
     }
   }
 }
